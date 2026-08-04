@@ -48,24 +48,42 @@ import {Month} from "./calendars/month";
 import {Weekday} from "./calendars/weekday";
 import {Behavior} from "./behavior";
 
-// --- کلاس شمسی مستقیماً در اینجا اضافه شد ---
+// --- لایه ترجمه شمسی ---
 import dayjs from 'dayjs';
 import jalaliday from 'jalaliday';
 dayjs.extend(jalaliday);
 
 class JalaliCalendar {
-    private static gregorianMonths: string[] = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    private static gregorianMonthsFull: string[] = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    private static gregorianMonthsShort: string[] = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     private static persianMonths: string[] = ['فروردین', 'اردیبهشت', 'خرداد', 'تیر', 'مرداد', 'شهریور', 'مهر', 'آبان', 'آذر', 'دی', 'بهمن', 'اسفند'];
 
     public static convertLabel(originalText: string): string {
         if (!originalText) return originalText;
         let resultText = originalText;
 
-        this.gregorianMonths.forEach((enMonth, index) => {
+        // 1. تبدیل نام‌های کامل ماه
+        this.gregorianMonthsFull.forEach((enMonth, index) => {
             const regex = new RegExp(enMonth, "gi");
             resultText = resultText.replace(regex, this.persianMonths[index]);
         });
 
+        // 2. تبدیل نام‌های مخفف ماه (مثل Sep, Oct)
+        this.gregorianMonthsShort.forEach((enMonth, index) => {
+            const regex = new RegExp(`\\b${enMonth}\\b`, "gi");
+            resultText = resultText.replace(regex, this.persianMonths[index]);
+        });
+
+        // 3. تبدیل فصل‌ها (Q1 -> فصل ۱)
+        resultText = resultText.replace(/\bQ1\b/g, "فصل ۱");
+        resultText = resultText.replace(/\bQ2\b/g, "فصل ۲");
+        resultText = resultText.replace(/\bQ3\b/g, "فصل ۳");
+        resultText = resultText.replace(/\bQ4\b/g, "فصل ۴");
+        
+        // 4. تبدیل هفته‌ها (W36 -> هفته ۳۶)
+        resultText = resultText.replace(/\bW(\d+)\b/g, "هفته $1");
+
+        // 5. تبدیل سال‌های 4 رقمی میلادی به شمسی
         const currentYear = new Date().getFullYear();
         for (let year = 1990; year <= currentYear + 10; year++) {
             const jalaliYear = dayjs(`${year}-01-01`).calendar('jalali').year();
@@ -561,7 +579,15 @@ export class Timeline implements powerbiVisualsApi.extensibility.visual.IVisual 
 
     public createFilter(startDate: Date, endDate: Date, target: IFilterColumnTarget): AdvancedFilter {
         if (startDate == null || endDate == null || !target) return null;
-        return new AdvancedFilter(target, "And", { operator: "GreaterThanOrEqual", value: startDate.toJSON() }, { operator: "LessThan", value: endDate.toJSON() });
+        
+        // تبدیل تاریخ‌ها به فرمت استاندارد ISO 8601 برای جلوگیری از خطای Power BI
+        const startISO = new Date(startDate.getTime() - (startDate.getTimezoneOffset() * 60000)).toISOString();
+        const endISO = new Date(endDate.getTime() - (endDate.getTimezoneOffset() * 60000)).toISOString();
+
+        return new AdvancedFilter(target, "And", 
+            { operator: "GreaterThanOrEqual", value: startISO }, 
+            { operator: "LessThan", value: endISO }
+        );
     }
 
     public clearSelection(target: IFilterColumnTarget): void {
@@ -682,7 +708,7 @@ export class Timeline implements powerbiVisualsApi.extensibility.visual.IVisual 
         timelineGranularityData.createGranularities(calendar, locale, localizationManager);
         timelineGranularityData.createLabels();
 
-        // --- موتور تبدیل شمسی ---
+        // --- اعمال لایه ترجمه شمسی ---
         const allGranularities = [GranularityType.year, GranularityType.quarter, GranularityType.month, GranularityType.week, GranularityType.day];
         
         allGranularities.forEach(gType => {
