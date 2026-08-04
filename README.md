@@ -1,105 +1,158 @@
-<div dir="rtl" align="right">
+// src/calendars/calendar.ts
+import { GranularityData } from "../granularity/granularityData";
+import { Utils } from "../utils";
+import { WeekStandard } from "./weekStandard";
+import dayjs from 'dayjs';
+import jalaliday from 'jalaliday';
 
-# 📅 Persian Jalali Date Slicer  
-**برش‌دهندهٔ تاریخ شمسی برای Power BI**
+dayjs.extend(jalaliday);
 
-[![build status](https://github.com/mohammad-alipour/persian-jalali-date-slicer/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/mohammad-alipour/persian-jalali-date-slicer/actions/workflows/build.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+interface IDateDictionary {
+    [year: number]: Date;
+}
 
-> یک انتخاب‌گر گرافیکی و زیبا برای بازه‌های زمانی در Power BI — **فورک‌شده از Timeline Slicer مایکروسافت** و اکنون با پشتیبانی کامل از **تقویم هجری شمسی (جلالی)** و **رابط کاربری کاملاً فارسی**.  
->
-> 👨‍💻 توسعه‌دهنده: **محمد علیپور**  
-> 📧 ایمیل: worldmohammad@gmail.com
+export interface IPeriodDates {
+    startDate: Date;
+    endDate: Date;
+}
 
-![پیش‌نمای Timeline Slicer](./assets/screenshot.png)
+export interface CalendarFormat {
+    month: number;
+    day: number;
+}
 
----
+export interface WeekdayFormat {
+    daySelection: boolean;
+    day: number;
+}
 
-## 📖 معرفی
+export class Calendar {
+    private static persianMonthNames: string[] = ['فروردین', 'اردیبهشت', 'خرداد', 'تیر', 'مرداد', 'شهریور', 'مهر', 'آبان', 'آذر', 'دی', 'بهمن', 'اسفند'];
 
-**Persian Jalali Date Slicer** یک برش‌دهندهٔ گرافیکی بازهٔ زمانی برای Power BI است که بر پایهٔ [Timeline Slicer مایکروسافت](https://github.com/microsoft/powerbi-visuals-timeline) ساخته شده. این نسخهٔ فورک‌شده، تقویم **هجری شمسی (جلالی)** و یک **رابط کاربری کاملاً فارسی** را به آن افزوده است و آن را به ابزاری ایده‌آل برای تحلیل‌گران فارسی‌زبان و داده‌های مرتبط با ایران و افغانستان تبدیل می‌کند.
+    protected firstDayOfWeek: number;
+    protected firstMonthOfYear: number;
+    protected firstDayOfYear: number;
+    protected dateOfFirstWeek: IDateDictionary;
+    protected dateOfFirstFullWeek: IDateDictionary;
+    protected quarterFirstMonths: number[];
+    protected isDaySelection: boolean;
+    protected EmptyYearOffset: number = 0;
+    protected YearOffset: number = 1;
 
-دیگر برای فیلتر کردن بازه‌های زمانی یا تغییر دانه‌بندی (روز/ماه/فصل/سال) نیازی به کلیک‌های بی‌پایان نیست. با همین کنترل سادهٔ لغزنده، فقط کلیک کنید و بکشید تا بازهٔ دلخواهتان انتخاب شود. می‌توانید بین نماهای **سال**، **فصل**، **ماه** و **روز** جابه‌جا شوید و در هر سطحی بازهٔ خود را برگزینید.  
-*کلید SHIFT + کلیک* هم برای انتخاب سریع بازه کار می‌کند.
+    constructor(calendarFormat: CalendarFormat, weekDaySettings: WeekdayFormat) {
+        this.isDaySelection = weekDaySettings.daySelection;
+        this.firstDayOfWeek = weekDaySettings.day;
+        this.firstMonthOfYear = calendarFormat.month;
+        this.firstDayOfYear = calendarFormat.day;
 
----
+        this.dateOfFirstWeek = {};
+        this.dateOfFirstFullWeek = {};
 
-## ✨ تقویم شمسی و رابط فارسی — چه چیزهایی جدید است؟
+        this.quarterFirstMonths = Calendar.QuarterFirstMonths.map((monthIndex: number) => {
+            return monthIndex + this.firstMonthOfYear;
+        });
+    }
 
-این نسخه پشتیبانی بومی از **تقویم جلالی** را به ارمغان می‌آورد:
+    // تابع جدید برای گرفتن نام ماه شمسی
+    public getMonthName(monthIndex: number): string {
+        return Calendar.persianMonthNames[monthIndex] || "";
+    }
 
-- 📆 **نمایش تاریخ شمسی** – تمام برچسب‌ها و مقادیر تاریخ (روز، ماه، فصل، سال) مطابق تقویم جلالی نشان داده می‌شوند.
-- 🗓️ **نام ماه‌های فارسی** – فروردین، اردیبهشت، خرداد، تیر، مرداد، شهریور، مهر، آبان، آذر، دی، بهمن، اسفند.
-- 🌱 **فصل‌های شمسی** – بهار، تابستان، پاییز، زمستان.
-- 🎯 **سال‌های شمسی** – مانند ۱۴۰۲، ۱۴۰۳ و ...
-- ⚙️ **تشخیص خودکار** – برش‌دهنده بر اساس تنظیمات محلی (Locale) ستون داده یا تنظیمات ناحیه‌ای Power BI، به‌طور خودکار تقویم شمسی را فعال می‌کند.
-- 🇮🇷 **رابط کاملاً فارسی** – تمام راهنماها، دکمه‌ها و برچسب‌ها به فارسی روان ترجمه شده‌اند تا کاربران فارسی‌زبان تجربه‌ای یکپارچه و بومی داشته باشند.
+    public getFiscalYearAdjustment(): number {
+        const firstMonthOfYear = this.getFirstMonthOfYear();
+        const firstDayOfYear = this.getFirstDayOfYear();
+        return ((firstMonthOfYear === 0 && firstDayOfYear === 1) ? 0 : 1);
+    }
 
-اکنون می‌توانید داده‌هایتان را دقیقاً مطابق تقویم رسمی ایران و افغانستان فیلتر و تحلیل کنید.
+    public determineYear(date: Date): number {
+        const firstMonthOfYear = this.getFirstMonthOfYear();
+        const firstDayOfYear = this.getFirstDayOfYear();
+        const firstDate: Date = new Date(date.getFullYear(), firstMonthOfYear, firstDayOfYear);
+        return date.getFullYear() + this.getFiscalYearAdjustment() - ((firstDate <= date) ? this.EmptyYearOffset : this.YearOffset);
+    }
 
----
+    public determineWeek(date: Date): number[] {
+        const year: number = this.determineYear(date);
+        const fiscalYearAdjustment = this.getFiscalYearAdjustment();
+        const dateOfFirstWeek: Date = this.getDateOfFirstWeek(year - fiscalYearAdjustment);
+        const dateOfFirstFullWeek: Date = this.getDateOfFirstFullWeek(year - fiscalYearAdjustment);
+        const weeks: number = Utils.GET_NUMBER_OF_WEEKS_BETWEEN_DATES(dateOfFirstFullWeek, date);
+        if (date >= dateOfFirstFullWeek && dateOfFirstWeek < dateOfFirstFullWeek) {
+            return [weeks + 1, year];
+        }
+        return [weeks, year];
+    }
 
-## 🚀 ویژگی‌ها
+    public getFirstDayOfWeek(): number { return this.firstDayOfWeek; }
+    public getFirstMonthOfYear(): number { return this.firstMonthOfYear; }
+    public getFirstDayOfYear(): number { return this.firstDayOfYear; }
+    public getNextDate(date: Date): Date { return GranularityData.NEXT_DAY(date); }
 
-- 📊 **انتخاب‌گر گرافیکی بازهٔ زمانی** – با کلیک و کشیدن، یک مقدار یا بازهٔ دلخواه را انتخاب کنید.
-- 🔄 **دانه‌بندی انعطاف‌پذیر** – به‌سرعت بین نماهای سال، فصل، ماه و روز جابه‌جا شوید.
-- 📅 **پشتیبانی کامل از تقویم شمسی** – نمایش تاریخ، نام ماه‌ها و فصل‌ها به فارسی.
-- 🖥️ **رابط کاربری فارسی** – تمامی متون و عناصر بصری به فارسی ترجمه شده‌اند.
-- 🎨 **ظاهر قابل شخصی‌سازی** – رنگ پس‌زمینه، رنگ انتخاب، اندازهٔ قلم و گزینه‌های قالب‌بندی فراوان.
-- ⌨️ **میانبر صفحه‌کلید** – `SHIFT + کلیک` برای انتخاب بازه.
-- 📌 بر پایهٔ نسخهٔ اصلی Microsoft Timeline Slicer، بهبودیافته و نگهداری‌شده توسط **محمد علیپور**.
+    public getWeekPeriod(date: Date): IPeriodDates {
+        const year: number = date.getFullYear();
+        const month: number = date.getMonth();
+        const dayOfWeek: number = date.getDay();
+        const weekDay = this.isDaySelection ? this.firstDayOfWeek : new Date(year, this.firstMonthOfYear, this.firstDayOfYear).getDay();
+        let deltaDays: number = 0;
+        if (weekDay !== dayOfWeek) { deltaDays = dayOfWeek - weekDay; }
+        if (deltaDays < 0) { deltaDays = 7 + deltaDays; }
+        const daysToWeekEnd = (7 - deltaDays);
+        const startDate = new Date(year, month, date.getDate() - deltaDays);
+        const endDate = new Date(year, month, date.getDate() + daysToWeekEnd);
+        return { startDate, endDate };
+    }
 
----
+    public getQuarterIndex(date: Date): number { return Math.floor(date.getMonth() / 3); }
+    public getQuarterStartDate(year: number, quarterIndex: number): Date { return new Date(year, this.quarterFirstMonths[quarterIndex], this.firstDayOfYear); }
+    public getQuarterEndDate(date: Date): Date { return new Date(date.getFullYear(), date.getMonth() + 3, this.firstDayOfYear); }
 
-## 📥 نصب و راه‌اندازی
+    public getQuarterPeriod(date: Date): IPeriodDates {
+        const quarterIndex = this.getQuarterIndex(date);
+        const startDate: Date = this.getQuarterStartDate(date.getFullYear(), quarterIndex);
+        const endDate: Date = this.getQuarterEndDate(startDate);
+        return { startDate, endDate };
+    }
 
-### از Microsoft AppSource (نسخهٔ اصلی)
-نسخهٔ پایهٔ مایکروسافت در AppSource موجود است:  
-[![AppSource](https://img.shields.io/badge/AppSource-Timeline%20Slicer-blue)](https://appsource.microsoft.com/en-us/product/power-bi-visuals/WA104380786)
+    public getMonthPeriod(date: Date): IPeriodDates {
+        const year: number = date.getFullYear();
+        const month: number = date.getMonth();
+        const startDate: Date = new Date(year, month, this.firstDayOfYear);
+        const endDate: Date = new Date(year, month + 1, this.firstDayOfYear);
+        return { startDate, endDate };
+    }
 
-### نسخهٔ فورک‌شده (با تقویم شمسی)
-می‌توانید فایل `pbiviz.` آماده را از صفحهٔ [Releases](https://github.com/mohammad-alipour/persian-jalali-date-slicer/releases) همین مخزن دریافت کرده و مستقیماً به گزارش Power BI خود اضافه کنید.
+    public getYearPeriod(date: Date): IPeriodDates {
+        const year: number = date.getFullYear();
+        const startDate: Date = new Date(year, this.firstMonthOfYear, this.firstDayOfYear);
+        const endDate: Date = new Date(year + 1, this.firstMonthOfYear, this.firstDayOfYear);
+        return { startDate, endDate };
+    }
 
----
+    public isChanged(calendarSettings: CalendarFormat, weekDaySettings: WeekdayFormat, weekStandard: WeekStandard): boolean {
+        return this.firstMonthOfYear !== calendarSettings.month || this.firstDayOfYear !== calendarSettings.day || this.firstDayOfWeek !== weekDaySettings.day || weekStandard !== WeekStandard.NotSet;
+    }
 
-## 🧩 روش استفاده
+    public getDateOfFirstWeek(year: number): Date {
+        if (!this.dateOfFirstWeek[year]) { this.dateOfFirstWeek[year] = new Date(year, this.firstMonthOfYear, this.firstDayOfYear); }
+        return this.dateOfFirstWeek[year];
+    }
 
-1. ویژوال را به گزارش Power BI خود وارد کنید.
-2. یک فیلد **تاریخ** (یا یک ستون عددی سال/ماه) را به بخش **Timeline** بیندازید.
-3. با لغزنده بازهٔ زمانی را انتخاب کنید، یا روی یک دورهٔ خاص کلیک کنید.
-4. با استفاده از دکمه‌های روی ویژوال، دانه‌بندی را تغییر دهید (مثلاً به نمای **ماه** بروید و ماه‌های شمسی مانند **فروردین** را انتخاب کنید).
-5. رنگ‌ها و اندازهٔ قلم را از پنل **Format** تنظیم کنید.
+    public getDateOfFirstFullWeek(year: number): Date {
+        if (!this.dateOfFirstFullWeek[year]) { this.dateOfFirstFullWeek[year] = this.calculateDateOfFirstFullWeek(year); }
+        return this.dateOfFirstFullWeek[year];
+    }
 
-### 💡 نکاتی برای تقویم شمسی
+    private calculateDateOfFirstFullWeek(year: number): Date {
+        let date: Date = new Date(year, this.firstMonthOfYear, this.firstDayOfYear);
+        const weekDay = this.isDaySelection ? this.firstDayOfWeek : new Date(year, this.firstMonthOfYear, this.firstDayOfYear).getDay();
+        while (date.getDay() !== weekDay) { date = GranularityData.NEXT_DAY(date); }
+        return date;
+    }
+}
 
-- اگر ستون تاریخ از نوع **Date** یا **DateTime** باشد و تنظیمات منطقه‌ای Power BI روی **Persian (Iran)** یا **Persian (Afghanistan)** تنظیم شده باشد، برش‌دهنده به‌طور خودکار تاریخ شمسی را نمایش می‌دهد.
-- برای ستون‌های سال/ماه عددی (مثلاً `ShamsiYear` = 1402 و `ShamsiMonth` = 1)، مستقیماً از آن‌ها استفاده کنید — ویژوال به‌طور خودکار آن‌ها را به نام ماه‌های فارسی نگاشت می‌دهد.
-- نمای فصل، ماه‌ها را بر اساس فصل‌های استاندارد شمسی گروه‌بندی می‌کند.
-
----
-
-## 🎨 گزینه‌های قالب‌بندی
-
-- **Background** – رنگ و شفافیت پس‌زمینه.
-- **Selection color** – رنگ محدودهٔ انتخاب‌شده.
-- **Labels** – خانوادهٔ قلم، اندازه و رنگ برچسب‌ها.
-- **Granularity buttons** – استایل دکمه‌های سال، فصل، ماه و روز.
-
----
-
-## 🤝 مشارکت
-
-مشارکت‌های شما مایهٔ خوشحالی است! اگر می‌خواهید پشتیبانی از تقویم شمسی را بهبود ببخشید یا ویژگی جدیدی اضافه کنید، لطفاً این مخزن را فورک کرده و یک Pull Request ارسال کنید. همچنین می‌توانید برای بحث در مورد ایده‌ها، یک Issue باز کنید.
-
----
-
-## 🏆 تقدیر و مجوز
-
-- ویژوال اصلی: [Microsoft Power BI Timeline Slicer](https://github.com/microsoft/powerbi-visuals-timeline) (دارای مجوز MIT)
-- منطق تبدیل تقویم شمسی برگرفته از کتابخانهٔ `jalaali-js`.
-- نسخهٔ فورک توسط **محمد علیپور** توسعه و نگهداری می‌شود.  
-  📧 worldmohammad@gmail.com
-
-این پروژه تحت مجوز MIT منتشر می‌شود — جزئیات در فایل [LICENSE](./LICENSE).
-
-</div>
+// هک اصلی: اضافه کردن ماه‌های شمسی به پیشفرض کلاس Calendar
+const _originalGetMonthName = Calendar.prototype.getMonthName;
+Calendar.prototype.getMonthName = function(monthIndex: number): string {
+    const persianMonths = ['فروردین', 'اردیبهشت', 'خرداد', 'تیر', 'مرداد', 'شهریور', 'مهر', 'آبان', 'آذر', 'دی', 'بهمن', 'اسفند'];
+    return persianMonths[monthIndex] || "";
+};
