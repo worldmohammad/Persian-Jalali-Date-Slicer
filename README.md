@@ -1,84 +1,105 @@
-# persian-jalali-date-slicer
+<div dir="rtl" align="right">
+
+# 📅 Persian Jalali Date Slicer  
+**برش‌دهندهٔ تاریخ شمسی برای Power BI**
 
 [![build status](https://github.com/mohammad-alipour/persian-jalali-date-slicer/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/mohammad-alipour/persian-jalali-date-slicer/actions/workflows/build.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-> Graphical date range selector for Power BI — **forked from Microsoft's Timeline Slicer** and now enriched with full **Persian (Jalali/Shamsi) calendar** and a native **Farsi user interface**.
+> یک انتخاب‌گر گرافیکی و زیبا برای بازه‌های زمانی در Power BI — **فورک‌شده از Timeline Slicer مایکروسافت** و اکنون با پشتیبانی کامل از **تقویم هجری شمسی (جلالی)** و **رابط کاربری کاملاً فارسی**.  
 >
-> توسعه‌دهنده: محمد علیپور  
-> ایمیل: worldmohammad@gmail.com
+> 👨‍💻 توسعه‌دهنده: **محمد علیپور**  
+> 📧 ایمیل: worldmohammad@gmail.com
 
-![Timeline Slicer screenshot](./assets/screenshot.png)
+![پیش‌نمای Timeline Slicer](./assets/screenshot.png)
 
-## Overview
+---
 
-**persian-jalali-date-slicer** is a graphical date range selector for Power BI, originally based on the [Microsoft Timeline Slicer](https://github.com/microsoft/powerbi-visuals-timeline). This fork adds complete support for the **Persian solar Hijri calendar (Jalali/Shamsi)** and a fully translated **Persian (Farsi) user interface**, making it the ideal date filtering tool for Farsi-speaking analysts and Iranian/Afghan datasets.
+## 📖 معرفی
 
-Filtering by date ranges or changing granularity (day/month/quarter/year) no longer requires endless clicks. With this simple slider control you just click and drag to select the range you want. You can switch between **year**, **quarter**, **month**, and **day** views to select ranges at any level.  
-*SHIFT + click* also works for selecting a range.
+**Persian Jalali Date Slicer** یک برش‌دهندهٔ گرافیکی بازهٔ زمانی برای Power BI است که بر پایهٔ [Timeline Slicer مایکروسافت](https://github.com/microsoft/powerbi-visuals-timeline) ساخته شده. این نسخهٔ فورک‌شده، تقویم **هجری شمسی (جلالی)** و یک **رابط کاربری کاملاً فارسی** را به آن افزوده است و آن را به ابزاری ایده‌آل برای تحلیل‌گران فارسی‌زبان و داده‌های مرتبط با ایران و افغانستان تبدیل می‌کند.
 
-## ✨ Persian Calendar & Farsi UI – What's new?
+دیگر برای فیلتر کردن بازه‌های زمانی یا تغییر دانه‌بندی (روز/ماه/فصل/سال) نیازی به کلیک‌های بی‌پایان نیست. با همین کنترل سادهٔ لغزنده، فقط کلیک کنید و بکشید تا بازهٔ دلخواهتان انتخاب شود. می‌توانید بین نماهای **سال**، **فصل**، **ماه** و **روز** جابه‌جا شوید و در هر سطحی بازهٔ خود را برگزینید.  
+*کلید SHIFT + کلیک* هم برای انتخاب سریع بازه کار می‌کند.
 
-This fork introduces native support for the **Jalali calendar**:
+---
 
-- **Shamsi date display** – all labels and date values (days, months, quarters, years) are shown according to the Jalali calendar.
-- **Persian month names** – Farvardin, Ordibehesht, Khordad, Tir, Mordad, Shahrivar, Mehr, Aban, Azar, Dey, Bahman, Esfand.
-- **Persian seasons** – Spring (بهار), Summer (تابستان), Autumn (پاییز), Winter (زمستان).
-- **Shamsi years** – e.g., ۱۴۰۲, ۱۴۰۳, etc.
-- **Automatic detection** – the visual automatically switches to Shamsi calendar based on your data column’s locale or your Power BI file’s regional settings.
-- **Fully translated interface** – all tooltips, buttons, and labels are now available in **Persian**, providing a seamless native experience for Farsi-speaking users.
+## ✨ تقویم شمسی و رابط فارسی — چه چیزهایی جدید است؟
 
-Now you can filter and analyze datasets based on the official Iranian calendar exactly as you see it in your daily life.
+این نسخه پشتیبانی بومی از **تقویم جلالی** را به ارمغان می‌آورد:
 
-## Features
+- 📆 **نمایش تاریخ شمسی** – تمام برچسب‌ها و مقادیر تاریخ (روز، ماه، فصل، سال) مطابق تقویم جلالی نشان داده می‌شوند.
+- 🗓️ **نام ماه‌های فارسی** – فروردین، اردیبهشت، خرداد، تیر، مرداد، شهریور، مهر، آبان، آذر، دی، بهمن، اسفند.
+- 🌱 **فصل‌های شمسی** – بهار، تابستان، پاییز، زمستان.
+- 🎯 **سال‌های شمسی** – مانند ۱۴۰۲، ۱۴۰۳ و ...
+- ⚙️ **تشخیص خودکار** – برش‌دهنده بر اساس تنظیمات محلی (Locale) ستون داده یا تنظیمات ناحیه‌ای Power BI، به‌طور خودکار تقویم شمسی را فعال می‌کند.
+- 🇮🇷 **رابط کاملاً فارسی** – تمام راهنماها، دکمه‌ها و برچسب‌ها به فارسی روان ترجمه شده‌اند تا کاربران فارسی‌زبان تجربه‌ای یکپارچه و بومی داشته باشند.
 
-- **Graphical date range selector** – click and drag to select single values or date intervals.
-- **Flexible granularity** – switch on the fly between Year, Quarter, Month, and Day views.
-- **Persian calendar support** – full Shamsi date representation and season grouping.
-- **Persian (Farsi) UI** – all interface texts translated for a native experience.
-- **Customizable appearance** – change background color, selection color, font size, and many other formatting options.
-- **Keyboard shortcut** – use `SHIFT + click` to extend or create a range selection.
-- Based on the original Microsoft Timeline Slicer, enhanced and maintained by **Mohammad Alipour** (worldmohammad@gmail.com).
+اکنون می‌توانید داده‌هایتان را دقیقاً مطابق تقویم رسمی ایران و افغانستان فیلتر و تحلیل کنید.
 
-## Installation
+---
 
-### From Microsoft AppSource (original visual)
-The base visual is available at:
+## 🚀 ویژگی‌ها
+
+- 📊 **انتخاب‌گر گرافیکی بازهٔ زمانی** – با کلیک و کشیدن، یک مقدار یا بازهٔ دلخواه را انتخاب کنید.
+- 🔄 **دانه‌بندی انعطاف‌پذیر** – به‌سرعت بین نماهای سال، فصل، ماه و روز جابه‌جا شوید.
+- 📅 **پشتیبانی کامل از تقویم شمسی** – نمایش تاریخ، نام ماه‌ها و فصل‌ها به فارسی.
+- 🖥️ **رابط کاربری فارسی** – تمامی متون و عناصر بصری به فارسی ترجمه شده‌اند.
+- 🎨 **ظاهر قابل شخصی‌سازی** – رنگ پس‌زمینه، رنگ انتخاب، اندازهٔ قلم و گزینه‌های قالب‌بندی فراوان.
+- ⌨️ **میانبر صفحه‌کلید** – `SHIFT + کلیک` برای انتخاب بازه.
+- 📌 بر پایهٔ نسخهٔ اصلی Microsoft Timeline Slicer، بهبودیافته و نگهداری‌شده توسط **محمد علیپور**.
+
+---
+
+## 📥 نصب و راه‌اندازی
+
+### از Microsoft AppSource (نسخهٔ اصلی)
+نسخهٔ پایهٔ مایکروسافت در AppSource موجود است:  
 [![AppSource](https://img.shields.io/badge/AppSource-Timeline%20Slicer-blue)](https://appsource.microsoft.com/en-us/product/power-bi-visuals/WA104380786)
 
-### Forked version (with Persian calendar)
-You can download the latest `.pbiviz` file from this repository’s [Releases](https://github.com/mohammad-alipour/persian-jalali-date-slicer/releases) page and import it directly into your Power BI reports.
+### نسخهٔ فورک‌شده (با تقویم شمسی)
+می‌توانید فایل `pbiviz.` آماده را از صفحهٔ [Releases](https://github.com/mohammad-alipour/persian-jalali-date-slicer/releases) همین مخزن دریافت کرده و مستقیماً به گزارش Power BI خود اضافه کنید.
 
-## Usage
+---
 
-1. Import the visual into your Power BI report.
-2. Add a **Date** field (or a numeric year/month column) to the **Timeline** field well.
-3. Use the slider to select a date range, or click on a specific period.
-4. Change the granularity using the buttons on the visual (e.g., switch to **Month** view to select by Persian months like **Farvardin**).
-5. Customize colors and text size in the **Format** pane.
+## 🧩 روش استفاده
 
-### Persian Calendar Tips
+1. ویژوال را به گزارش Power BI خود وارد کنید.
+2. یک فیلد **تاریخ** (یا یک ستون عددی سال/ماه) را به بخش **Timeline** بیندازید.
+3. با لغزنده بازهٔ زمانی را انتخاب کنید، یا روی یک دورهٔ خاص کلیک کنید.
+4. با استفاده از دکمه‌های روی ویژوال، دانه‌بندی را تغییر دهید (مثلاً به نمای **ماه** بروید و ماه‌های شمسی مانند **فروردین** را انتخاب کنید).
+5. رنگ‌ها و اندازهٔ قلم را از پنل **Format** تنظیم کنید.
 
-- If your date column is of type **Date** or **DateTime** and your Power BI locale is set to **Persian (Iran)** or **Persian (Afghanistan)**, the visual will automatically display Shamsi dates.
-- For year/month columns (e.g., `ShamsiYear` = 1402, `ShamsiMonth` = 1), you can use them directly – the visual will map them to Persian month names.
-- The season view groups months into the standard Persian seasons.
+### 💡 نکاتی برای تقویم شمسی
 
-## Formatting Options
+- اگر ستون تاریخ از نوع **Date** یا **DateTime** باشد و تنظیمات منطقه‌ای Power BI روی **Persian (Iran)** یا **Persian (Afghanistan)** تنظیم شده باشد، برش‌دهنده به‌طور خودکار تاریخ شمسی را نمایش می‌دهد.
+- برای ستون‌های سال/ماه عددی (مثلاً `ShamsiYear` = 1402 و `ShamsiMonth` = 1)، مستقیماً از آن‌ها استفاده کنید — ویژوال به‌طور خودکار آن‌ها را به نام ماه‌های فارسی نگاشت می‌دهد.
+- نمای فصل، ماه‌ها را بر اساس فصل‌های استاندارد شمسی گروه‌بندی می‌کند.
 
-- **Background** – customize the background color and transparency.
-- **Selection color** – set the color of the selected range.
-- **Labels** – adjust font family, size, and color for period labels.
-- **Granularity buttons** – style the buttons for Year, Quarter, Month, and Day.
+---
 
-## Contributing
+## 🎨 گزینه‌های قالب‌بندی
 
-Contributions are welcome! If you'd like to improve Persian calendar support or add new features, please fork this repository and submit a pull request. You can also open an issue to discuss ideas.
+- **Background** – رنگ و شفافیت پس‌زمینه.
+- **Selection color** – رنگ محدودهٔ انتخاب‌شده.
+- **Labels** – خانوادهٔ قلم، اندازه و رنگ برچسب‌ها.
+- **Granularity buttons** – استایل دکمه‌های سال، فصل، ماه و روز.
 
-## Credits & License
+---
 
-- Original visual: [Microsoft Power BI Timeline Slicer](https://github.com/microsoft/powerbi-visuals-timeline) (MIT License)
-- Persian calendar logic inspired by the `jalaali-js` library.
-- Fork developed and maintained by **Mohammad Alipour**  
-  Email: worldmohammad@gmail.com
+## 🤝 مشارکت
 
-This project is licensed under the MIT License – see [LICENSE](./LICENSE) for details.
+مشارکت‌های شما مایهٔ خوشحالی است! اگر می‌خواهید پشتیبانی از تقویم شمسی را بهبود ببخشید یا ویژگی جدیدی اضافه کنید، لطفاً این مخزن را فورک کرده و یک Pull Request ارسال کنید. همچنین می‌توانید برای بحث در مورد ایده‌ها، یک Issue باز کنید.
+
+---
+
+## 🏆 تقدیر و مجوز
+
+- ویژوال اصلی: [Microsoft Power BI Timeline Slicer](https://github.com/microsoft/powerbi-visuals-timeline) (دارای مجوز MIT)
+- منطق تبدیل تقویم شمسی برگرفته از کتابخانهٔ `jalaali-js`.
+- نسخهٔ فورک توسط **محمد علیپور** توسعه و نگهداری می‌شود.  
+  📧 worldmohammad@gmail.com
+
+این پروژه تحت مجوز MIT منتشر می‌شود — جزئیات در فایل [LICENSE](./LICENSE).
+
+</div>
