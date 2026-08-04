@@ -1,46 +1,29 @@
 /*
  *  Power BI Visualizations
- *
- *  Copyright (c) Microsoft Corporation
- *  All rights reserved.
- *  MIT License
- *
- *  Permission is hereby granted, free of charge, to any person obtaining a copy
- *  of this software and associated documentation files (the ""Software""), to deal
- *  in the Software without restriction, including without limitation the rights
- *  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *  copies of the Software, and to permit persons to whom the Software is
- *  furnished to do so, subject to the following conditions:
- *
- *  The above copyright notice and this permission notice shall be included in
- *  all copies or substantial portions of the Software.
- *
- *  THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- *  THE SOFTWARE.
+ *  Enhanced Modern UI for Jalali Timeline Slicer
  */
 
- /**
+/**
  * Imports external styles.
- * We compile it as a less file in order to wrap the external CSS rules.
  */
 @import (less) "/node_modules/powerbi-visuals-utils-interactivityutils/lib/index.css";
 @import (less) "/node_modules/powerbi-visuals-utils-chartutils/lib/index.css";
 
+// تعریف رنگ‌های مدرن برای استفاده در کل ویژوال
+@primary-color: #2563EB; // آبی مدرن
+@hover-color: #DBEAFE;   // آبی بسیار روشن برای هاور
+@text-color: #334155;   // خاکستری تیره برای متن‌ها
+@border-color: #CBD5E1; // خاکستری روشن برای خطوط جدول
+
 .timeline-component {
     cursor: default;
+    font-family: "Segoe UI", "Vazirmatn", Tahoma, Arial, sans-serif !important; // پشتیبانی از فونت‌های فارسی زیبا
+    background-color: transparent;
 
     .timeline {
-        font-family: helvetica, arial, sans-serif;
-
+        font-family: inherit;
         -webkit-tap-highlight-color: transparent;
-
         cursor: default;
-
         overflow-y: hidden;
 
         .label,
@@ -48,45 +31,73 @@
         .upperTextCell,
         .lowerTextCell {
             text-anchor: middle;
+            fill: @text-color;
+            font-weight: 500;
+            user-select: none;
+            transition: fill 0.2s ease;
         }
 
         .selection {
             &Cursor {
-                fill: gray;
+                fill: @primary-color;
+                filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+                transition: transform 0.1s ease;
             }
 
             &RangeContainer {
                 text-anchor: start;
+                fill: @primary-color;
+                font-weight: 700 !important;
+                text-shadow: 0 1px 0 rgba(255,255,255,0.8);
             }
         }
 
+        // استایل سلول‌های تقویم
         .periodSlicerSelectionRect,
         .timelineVertLine,
         .cellRect {
             cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            
+            // افکت Hover روی سلول‌ها
+            &:hover {
+                fill-opacity: 0.8;
+                transform: translateY(-1px);
+            }
         }
 
         .selectionCursor {
             cursor: ew-resize;
+            fill: @primary-color;
+            filter: drop-shadow(0 4px 6px rgba(37, 99, 235, 0.4));
         }
     }
 
+    // استایل نوار بالایی (انتخاب سال/فصل/ماه)
     .timelineSlicer {
-        fill: #000000;
-
+        fill: @text-color;
         cursor: pointer;
+        transition: all 0.2s ease;
 
         .periodSlicer {
             &Rect {
-                stroke: #aaa;
-                stroke-width: 2px;
+                stroke: @border-color;
+                stroke-width: 1.5px;
                 fill: transparent;
+                rx: 6; // لبه‌های گرد
+                ry: 6;
             }
 
             &Granularities,
             &Selection {
-                font-size: 10px;
+                font-size: 11px;
+                font-weight: 600;
                 text-anchor: middle;
+                transition: fill 0.2s ease;
+                
+                &:hover {
+                    fill: @primary-color;
+                }
             }
 
             &SelectionRect {
@@ -96,11 +107,43 @@
 
         .periodSlicerRect {
             pointer-events: none;
+            fill: @primary-color;
+            fill-opacity: 0.1;
+            stroke: @primary-color;
+            stroke-width: 1px;
+            rx: 4;
+            ry: 4;
         }
     }
 
+    // استایل مدرن برای اسکرول‌بار
     .timelineWrapper {
         overflow: auto;
         width: 100%;
+        
+        // استایل برای مرورگرهای مبتنی بر WebKit (Chrome, Edge, Safari)
+        &::-webkit-scrollbar {
+            height: 8px;
+            width: 8px;
+        }
+
+        &::-webkit-scrollbar-track {
+            background: #F1F5F9;
+            border-radius: 10px;
+        }
+
+        &::-webkit-scrollbar-thumb {
+            background: #94A3B8;
+            border-radius: 10px;
+            transition: background 0.2s;
+        }
+
+        &::-webkit-scrollbar-thumb:hover {
+            background: @primary-color;
+        }
+
+        // استایل برای مرورگر فایرفاکس
+        scrollbar-width: thin;
+        scrollbar-color: #94A3B8 #F1F5F9;
     }
 }
