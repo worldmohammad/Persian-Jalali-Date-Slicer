@@ -1,4 +1,3 @@
-
 import { Selection as d3Selection, local as d3local } from "d3-selection";
 import {ICursorDataPoint, ITimelineDataPoint} from "./dataInterfaces";
 import ISelectionManager = powerbi.extensibility.ISelectionManager;
@@ -33,7 +32,6 @@ export class Behavior {
         const dragBehavior = d3Drag<any, ICursorDataPoint>()
             .subject((_: D3DragEvent<any, ICursorDataPoint, ICursorDataPoint>, cursorDataPoint: ICursorDataPoint) => {
                 cursorDataPoint.x = cursorDataPoint.selectionIndex * options.cells.cellWidth;
-
                 return cursorDataPoint;
             })
             .on("drag end", null)
