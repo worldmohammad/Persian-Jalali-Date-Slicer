@@ -1,12 +1,30 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- Generator: Adobe Illustrator 15.0.2, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
-<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-<svg version="1.1" id="Шар_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-	 width="20px" height="20px" viewBox="0 0 20 20" enable-background="new 0 0 20 20" xml:space="preserve">
-<g id="Timeline">
-	<path id="Фігура-9" fill="#FFFFFF" d="M16,13.986V6.001h2.998v7.985H16z M1,6.001h2.998v7.985H1V6.001z"/>
-	<path id="Фігура-9-копія-7" fill="#4D82B8" d="M4,6.001h12.01v7.985H4V6.001z"/>
-	<path id="Фігура-9-копія-2" fill="#808080" d="M17,3V2h-2v1h-1V2h-2v1h-1V2H9v1H8V2H6v1H5V2H3v1H2V2V1.344V1h16v0.344V2
-		v1H17z M1,17h0.999v1.996H1V17z M14.995,18.996H6V17h8.995V18.996z M17.999,18.996H17V17h0.999V18.996z"/>
-</g>
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" fill="none">
+  <!-- Background Card -->
+  <rect width="64" height="64" rx="14" fill="#0F172A"/>
+  
+  <!-- Calendar Header Bar -->
+  <rect x="10" y="12" width="44" height="12" rx="4" fill="#F59E0B"/>
+  
+  <!-- Calendar Body -->
+  <rect x="10" y="24" width="44" height="28" rx="4" fill="#1E293B" stroke="#334155" stroke-width="2"/>
+  
+  <!-- Calendar Binder Rings -->
+  <rect x="18" y="8" width="4" height="8" rx="2" fill="#F8FAFC"/>
+  <rect x="42" y="8" width="4" height="8" rx="2" fill="#F8FAFC"/>
+  
+  <!-- Jalali Grid Matrix -->
+  <circle cx="20" cy="32" r="2.5" fill="#94A3B8"/>
+  <circle cx="28" cy="32" r="2.5" fill="#94A3B8"/>
+  <circle cx="36" cy="32" r="2.5" fill="#10B981"/>
+  <circle cx="44" cy="32" r="2.5" fill="#10B981"/>
+  
+  <circle cx="20" cy="40" r="2.5" fill="#10B981"/>
+  <circle cx="28" cy="40" r="2.5" fill="#10B981"/>
+  <circle cx="36" cy="40" r="2.5" fill="#10B981"/>
+  <circle cx="44" cy="40" r="2.5" fill="#94A3B8"/>
+  
+  <!-- Range Slicer Filter Line & Handles -->
+  <rect x="16" y="46" width="32" height="3" rx="1.5" fill="#F59E0B"/>
+  <circle cx="20" cy="47.5" r="3.5" fill="#F8FAFC" stroke="#F59E0B" stroke-width="1.5"/>
+  <circle cx="44" cy="47.5" r="3.5" fill="#F8FAFC" stroke="#F59E0B" stroke-width="1.5"/>
 </svg>
