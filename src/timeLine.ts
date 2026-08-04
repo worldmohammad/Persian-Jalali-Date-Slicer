@@ -4,7 +4,7 @@
  */
 
 import "../style/visual.less";
-import { JalaliEngine } from "./calendars/jalaliEngine";
+
 import {select as d3Select, selectAll as d3SelectAll, Selection as D3Selection,} from "d3-selection";
 import {D3DragEvent} from "d3-drag";
 import {arc as d3Arc} from "d3-shape";
@@ -48,8 +48,8 @@ import {Month} from "./calendars/month";
 import {Weekday} from "./calendars/weekday";
 import {Behavior} from "./behavior";
 
-// اضافه شدن ایمپورت فایل کمکی شمسی
-import * as PersianDateHelper from './persianDateHelper';
+// ایمپورت فایل شمسی
+import { JalaliCalendar } from "./jalaliCalendar";
 
 interface IAdjustedFilterDatePeriod {
     period: DatePeriodBase;
@@ -57,57 +57,32 @@ interface IAdjustedFilterDatePeriod {
 }
 
 export class Timeline implements powerbiVisualsApi.extensibility.visual.IVisual {
-    // ... (کدهای ثابت و استاتیک بدون تغییر باقی می‌مانند) ...
+    
     public static ADJUST_CALENDAR_DAY_SETTINGS(calendarSettings: CalendarFormat): number {
         const theLatestDayOfMonth: number = Utils.GET_THE_LATEST_DAY_OF_MONTH(calendarSettings.month);
-        const adjustedDay = Math.max(
-            CalendarSettingsCard.DefaultDay,
-            Math.min(theLatestDayOfMonth, calendarSettings.day),
-        );
-        return adjustedDay;
+        return Math.max(CalendarSettingsCard.DefaultDay, Math.min(theLatestDayOfMonth, calendarSettings.day));
     }
 
-    public static SELECT_CURRENT_PERIOD(
-        datePeriod: ITimelineDatePeriodBase,
-        granularity: GranularityType,
-        calendar: Calendar,
-    ) {
+    public static SELECT_CURRENT_PERIOD(datePeriod: ITimelineDatePeriodBase, granularity: GranularityType, calendar: Calendar) {
         return this.SELECT_PERIOD(datePeriod, granularity, calendar, Utils.RESET_TIME(new Date()));
     }
 
-    public CONVERTER(
-        dataView: powerbiVisualsApi.DataView,
-        initialized: boolean,
-        viewport: powerbiVisualsApi.IViewport,
-        previousCalendar: Calendar,
-    ): Calendar {
-        if (Timeline.isDataViewValid(dataView)) {
-            return null;
-        }
+    public CONVERTER(dataView: powerbiVisualsApi.DataView, initialized: boolean, viewport: powerbiVisualsApi.IViewport, previousCalendar: Calendar): Calendar {
+        if (Timeline.isDataViewValid(dataView)) return null;
 
         let calendar: Calendar;
         let startDate: Date;
         let endDate: Date;
 
         if (!initialized) {
-            this.timelineData.cursorDataPoints = [{
-                cursorIndex: 0,
-                selectionIndex: Timeline.DefaultSelectionStartIndex,
-                x: Timeline.DefaultCursorDatapointX,
-                y: Timeline.DefaultCursorDatapointY,
-            },
-            {
-                cursorIndex: 1,
-                selectionIndex: Timeline.DefaultSelectionStartIndex,
-                x: Timeline.DefaultCursorDatapointX,
-                y: Timeline.DefaultCursorDatapointY,
-            }];
+            this.timelineData.cursorDataPoints = [
+                { cursorIndex: 0, selectionIndex: Timeline.DefaultSelectionStartIndex, x: Timeline.DefaultCursorDatapointX, y: Timeline.DefaultCursorDatapointY },
+                { cursorIndex: 1, selectionIndex: Timeline.DefaultSelectionStartIndex, x: Timeline.DefaultCursorDatapointX, y: Timeline.DefaultCursorDatapointY }
+            ];
         }
 
         const {weekStandard, calendarFormat, weekDayFormat} = Timeline.computeCalendarFormat(this.visualSettings);
-
-        const isCalendarChanged: boolean = previousCalendar
-            && previousCalendar.isChanged(calendarFormat, weekDayFormat, weekStandard);
+        const isCalendarChanged: boolean = previousCalendar && previousCalendar.isChanged(calendarFormat, weekDayFormat, weekStandard);
 
         if (this.timelineData && this.timelineData.currentGranularity) {
             startDate = Utils.GET_START_SELECTION_DATE(this.timelineData);
@@ -116,11 +91,8 @@ export class Timeline implements powerbiVisualsApi.extensibility.visual.IVisual 
 
         if (!initialized || isCalendarChanged) {
             calendar = new CalendarFactory().create(weekStandard, calendarFormat, weekDayFormat);
-            const granularity: GranularityType = this.visualSettings.granularity.granularity.value
-                    ? <GranularityType>this.visualSettings.granularity.granularity.value.value
-                    : GranularityType.month;
-
-                this.timelineData.currentGranularity = this.timelineGranularityData.getGranularity(granularity);
+            const granularity: GranularityType = this.visualSettings.granularity.granularity.value ? <GranularityType>this.visualSettings.granularity.granularity.value.value : GranularityType.month;
+            this.timelineData.currentGranularity = this.timelineGranularityData.getGranularity(granularity);
         } else {
             calendar = previousCalendar;
         }
@@ -132,10 +104,7 @@ export class Timeline implements powerbiVisualsApi.extensibility.visual.IVisual 
 
         const category: powerbiVisualsApi.DataViewCategoryColumn = dataView.categorical.categories[0];
         this.timelineData.filterColumnTarget = extractFilterColumnTarget(category);
-
-        if (category.source.type.numeric) {
-            (<any>(this.timelineData.filterColumnTarget)).ref = "Date";
-        }
+        if (category.source.type.numeric) { (<any>(this.timelineData.filterColumnTarget)).ref = "Date"; }
 
         if (isCalendarChanged && startDate && endDate) {
             Utils.UNSEPARATE_SELECTION(this.timelineData.currentGranularity.getDatePeriods());
@@ -144,114 +113,49 @@ export class Timeline implements powerbiVisualsApi.extensibility.visual.IVisual 
 
         const timelineElements: ITimelineDatePeriod[] = this.timelineData.currentGranularity.getDatePeriods();
         this.timelineData.timelineDataPoints = [];
-
         for (const currentTimePeriod of timelineElements) {
-            const datapoint: ITimelineDataPoint = {
-                datePeriod: currentTimePeriod,
-                index: currentTimePeriod.index,
-            };
-            this.timelineData.timelineDataPoints.push(datapoint);
+            this.timelineData.timelineDataPoints.push({ datePeriod: currentTimePeriod, index: currentTimePeriod.index });
         }
 
-        const countFullCells: number = this.timelineData.currentGranularity
-            .getDatePeriods()
-            .filter((datePeriod: ITimelineDatePeriod) => {
-                return datePeriod.index % 1 === 0;
-            })
-            .length;
-
-        this.setMeasures(
-            this.timelineData.currentGranularity.getType(),
-            countFullCells,
-            viewport,
-            Timeline.TimelineMargins,
-        );
-
+        const countFullCells: number = this.timelineData.currentGranularity.getDatePeriods().filter((dp: ITimelineDatePeriod) => dp.index % 1 === 0).length;
+        this.setMeasures(this.timelineData.currentGranularity.getType(), countFullCells, viewport, Timeline.TimelineMargins);
         this.updateCursors(this.timelineData);
         return calendar;
     }
 
     private static computeCalendarFormat(timelineSettings: TimeLineSettingsModel) {
-        const weekStandard: WeekStandard = timelineSettings.weeksDeterminationStandards.weekStandard.value
-            ? <WeekStandard>timelineSettings.weeksDeterminationStandards.weekStandard.value.value
-            : WeekStandard.NotSet;
-
-        const calendarFormat: CalendarFormat = {
-            month: timelineSettings.calendar.month.value
-                ? <Month>timelineSettings.calendar.month.value.value
-                : Month.January,
-            day: timelineSettings.calendar.day.value,
-        }
-
-        const weekDayFormat: WeekdayFormat = {
-            daySelection: timelineSettings.weekDay.daySelection.value,
-            day: timelineSettings.weekDay.day.value
-                ? <Weekday>timelineSettings.weekDay.day.value.value
-                : Weekday.Sunday,
-        }
+        const weekStandard: WeekStandard = timelineSettings.weeksDeterminationStandards.weekStandard.value ? <WeekStandard>timelineSettings.weeksDeterminationStandards.weekStandard.value.value : WeekStandard.NotSet;
+        const calendarFormat: CalendarFormat = { month: timelineSettings.calendar.month.value ? <Month>timelineSettings.calendar.month.value.value : Month.January, day: timelineSettings.calendar.day.value };
+        const weekDayFormat: WeekdayFormat = { daySelection: timelineSettings.weekDay.daySelection.value, day: timelineSettings.weekDay.day.value ? <Weekday>timelineSettings.weekDay.day.value.value : Weekday.Sunday };
         return {weekStandard, calendarFormat, weekDayFormat};
     }
 
-    public static SELECT_PERIOD(
-        datePeriod: ITimelineDatePeriodBase,
-        granularity: GranularityType,
-        calendar: Calendar,
-        periodDate: Date,
-    ) {
+    public static SELECT_PERIOD(datePeriod: ITimelineDatePeriodBase, granularity: GranularityType, calendar: Calendar, periodDate: Date) {
         let startDate: Date = periodDate;
         let endDate: Date;
 
         switch (granularity) {
-            case GranularityType.day:
-                endDate = calendar.getNextDate(periodDate);
-                break;
-            case GranularityType.week:
-                ({ startDate, endDate } = calendar.getWeekPeriod(periodDate));
-                break;
-            case GranularityType.month:
-                ({ startDate, endDate } = calendar.getMonthPeriod(periodDate));
-                break;
-            case GranularityType.quarter:
-                ({ startDate, endDate } = calendar.getQuarterPeriod(periodDate));
-                break;
-            case GranularityType.year:
-                ({ startDate, endDate } = calendar.getYearPeriod(periodDate));
-                break;
+            case GranularityType.day: endDate = calendar.getNextDate(periodDate); break;
+            case GranularityType.week: ({ startDate, endDate } = calendar.getWeekPeriod(periodDate)); break;
+            case GranularityType.month: ({ startDate, endDate } = calendar.getMonthPeriod(periodDate)); break;
+            case GranularityType.quarter: ({ startDate, endDate } = calendar.getQuarterPeriod(periodDate)); break;
+            case GranularityType.year: ({ startDate, endDate } = calendar.getYearPeriod(periodDate)); break;
         }
 
         if (granularity === GranularityType.day) {
-            const checkDatesForDayGranularity: boolean =
-                datePeriod.startDate <= startDate && endDate <= datePeriod.endDate ||
-                startDate.toString() === datePeriod.endDate.toString();
-            if (!checkDatesForDayGranularity) {
-                startDate = null;
-                endDate = null;
-            }
+            if (!(datePeriod.startDate <= startDate && endDate <= datePeriod.endDate || startDate.toString() === datePeriod.endDate.toString())) { startDate = null; endDate = null; }
         } else {
-            const startDateAvailable = (datePeriod.startDate <= startDate && startDate <= datePeriod.endDate);
-            const endDateAvailable = (datePeriod.startDate <= endDate && endDate <= datePeriod.endDate);
-            if (!startDateAvailable && !endDateAvailable) {
-                startDate = null;
-                endDate = null;
-            }
+            if (!(datePeriod.startDate <= startDate && startDate <= datePeriod.endDate) && !(datePeriod.startDate <= endDate && endDate <= datePeriod.endDate)) { startDate = null; endDate = null; }
         }
         return { startDate, endDate };
     }
 
     public static ARE_VISUAL_UPDATE_OPTIONS_VALID(options: powerbiVisualsApi.extensibility.visual.VisualUpdateOptions): boolean {
-        if (!options || !options.dataViews || !options.dataViews[0] || !options.dataViews[0].metadata || !Timeline.IS_DATA_VIEW_CATEGORICAL_VALID(options.dataViews[0].categorical)) {
-            return false;
-        }
+        if (!options || !options.dataViews || !options.dataViews[0] || !options.dataViews[0].metadata || !Timeline.IS_DATA_VIEW_CATEGORICAL_VALID(options.dataViews[0].categorical)) return false;
         const dataView: powerbiVisualsApi.DataView = options.dataViews[0];
         const columnExp: any = dataView.categorical.categories[0].source.expr;
         const valueType: string = columnExp ? columnExp.level : null;
-
-        // تغییر در اینجا: اجازه دریافت نوع DateTime را می‌دهیم
-        if (!(dataView.categorical.categories[0].source.type.dateTime
-            || (dataView.categorical.categories[0].source.type.numeric
-                && (valueType === "Year" || valueType === "Date")))) {
-            return false;
-        }
+        if (!(dataView.categorical.categories[0].source.type.dateTime || (dataView.categorical.categories[0].source.type.numeric && (valueType === "Year" || valueType === "Date")))) return false;
         return true;
     }
 
@@ -259,7 +163,6 @@ export class Timeline implements powerbiVisualsApi.extensibility.visual.IVisual 
         return !(!dataViewCategorical || !dataViewCategorical.categories || dataViewCategorical.categories.length !== 1 || !dataViewCategorical.categories[0].values || dataViewCategorical.categories[0].values.length === 0 || !dataViewCategorical.categories[0].source || !dataViewCategorical.categories[0].source.type);
     }
 
-    // ... (تعریف متغیرهای استاتیک و کلاس بدون تغییر باقی می‌مانند) ...
     private static TimelineMargins: ITimelineMargins = {
         BottomMargin: 10, CellHeight: 25, CellWidth: 40, ElementWidth: 30, FramePadding: 5, HeightOffset: 75,
         LeftMargin: 15, LegendHeight: 50, LegendHeightRange: 20, MaxCellHeight: 60, MinCellHeight: 20,
@@ -311,9 +214,7 @@ export class Timeline implements powerbiVisualsApi.extensibility.visual.IVisual 
     }
 
     private static isDataViewValid(dataView): boolean {
-        if (!dataView || !dataView.categorical || !dataView.metadata || dataView.categorical.categories.length <= 0 || !dataView.categorical.categories[0] || !dataView.categorical.categories[0].identityFields || dataView.categorical.categories[0].identityFields.length <= 0) {
-            return true;
-        }
+        if (!dataView || !dataView.categorical || !dataView.metadata || dataView.categorical.categories.length <= 0 || !dataView.categorical.categories[0] || !dataView.categorical.categories[0].identityFields || dataView.categorical.categories[0].identityFields.length <= 0) return true;
         return false;
     }
 
@@ -344,14 +245,9 @@ export class Timeline implements powerbiVisualsApi.extensibility.visual.IVisual 
         if (jsonFilters && jsonFilters[0] && jsonFilters[0].conditions && jsonFilters[0].conditions[0] && jsonFilters[0].conditions[1]) {
             const startDate: Date = new Date(`${jsonFilters[0].conditions[0].value}`);
             const endDate: Date = new Date(`${jsonFilters[0].conditions[1].value}`);
-            if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
-                this.filterDatePeriod = DatePeriodBase.CREATE(startDate, endDate);
-            } else {
-                this.filterDatePeriod = DatePeriodBase.CREATEEMPTY();
-            }
-        } else {
-            this.filterDatePeriod = DatePeriodBase.CREATEEMPTY();
-        }
+            if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) { this.filterDatePeriod = DatePeriodBase.CREATE(startDate, endDate); } 
+            else { this.filterDatePeriod = DatePeriodBase.CREATEEMPTY(); }
+        } else { this.filterDatePeriod = DatePeriodBase.CREATEEMPTY(); }
     }
 
     private setHighContrastColors() {
@@ -433,14 +329,14 @@ export class Timeline implements powerbiVisualsApi.extensibility.visual.IVisual 
     }
 
     public clearUserSelection(): void {
-        if (!this.initialized || !this.timelineData) { return; }
+        if (!this.initialized || !this.timelineData) return;
         this.clearSelection(this.timelineData.filterColumnTarget);
         this.toggleForceSelectionOptions();
     }
 
     public doesPeriodSlicerRectPositionNeedToUpdate(granularity: GranularityType): boolean {
         const sliderSelection = d3Select("rect.periodSlicerRect");
-        if (sliderSelection && sliderSelection.datum() === granularity) { return false; }
+        if (sliderSelection && sliderSelection.datum() === granularity) return false;
         return true;
     }
 
@@ -461,9 +357,7 @@ export class Timeline implements powerbiVisualsApi.extensibility.visual.IVisual 
             this.datePeriod = this.createDatePeriod(this.dataView);
             this.visualSettings = this.formattingSettingsService.populateFormattingSettingsModel(TimeLineSettingsModel, this.dataView);
             this.visualSettings.setLocalizedOptions(this.localizationManager);
-            if (!this.initialized) {
-                this.timelineData = { cursorDataPoints: [], timelineDataPoints: [] };
-            }
+            if (!this.initialized) { this.timelineData = { cursorDataPoints: [], timelineDataPoints: [] }; }
             this.parseJsonFilters(this.visualSettings, <AdvancedFilter[]>(this.options.jsonFilters));
             this.setHighContrastColors();
             this.adjustHeightOfElements(options.viewport.width);
@@ -553,18 +447,9 @@ export class Timeline implements powerbiVisualsApi.extensibility.visual.IVisual 
             })
             .attr("y", pixelConverter.toString(yPos))
             .attr("height", pixelConverter.toString(timelineProperties.cellHeight - this.visualSettings.cells.strokeWidth.value))
-            .attr("width", (dataPoint: ITimelineDataPoint) => {
-                return pixelConverter.toString(dataPoint.datePeriod.fraction * timelineProperties.cellWidth - this.visualSettings.cells.gapWidth.value);
-            })
+            .attr("width", (dataPoint: ITimelineDataPoint) => pixelConverter.toString(dataPoint.datePeriod.fraction * timelineProperties.cellWidth - this.visualSettings.cells.gapWidth.value))
             .append("title")
-            // تغییر در اینجا: تبدیل عنوان تولتیپ سلول به شمسی
-            .text((dataPoint: ITimelineDataPoint) => {
-                const originalTitle = timelineData.currentGranularity.generateLabel(dataPoint.datePeriod).title;
-                const startDate = dataPoint.datePeriod.startDate;
-                const endDate = dataPoint.datePeriod.endDate;
-                // اگر عنوان شامل تاریخ بود، آن را شمسی می‌کنیم
-                return `${PersianDateHelper.formatToJalali(startDate)} تا ${PersianDateHelper.formatToJalali(endDate)}`;
-            });
+            .text((dataPoint: ITimelineDataPoint) => JalaliCalendar.formatDateRange(dataPoint.datePeriod.startDate, dataPoint.datePeriod.endDate));
 
         this.fillCells(this.visualSettings);
     }
@@ -587,10 +472,10 @@ export class Timeline implements powerbiVisualsApi.extensibility.visual.IVisual 
             .attr("d", d3Arc<ICursorDataPoint>()
                 .innerRadius(0)
                 .outerRadius(cellHeight / Timeline.CellHeightDivider)
-                .startAngle((cursorDataPoint: ICursorDataPoint) => { return cursorDataPoint.cursorIndex * Math.PI + Math.PI; })
-                .endAngle((cursorDataPoint: ICursorDataPoint) => { return cursorDataPoint.cursorIndex * Math.PI + 2 * Math.PI; })
+                .startAngle((cursorDataPoint: ICursorDataPoint) => cursorDataPoint.cursorIndex * Math.PI + Math.PI)
+                .endAngle((cursorDataPoint: ICursorDataPoint) => cursorDataPoint.cursorIndex * Math.PI + 2 * Math.PI)
             )
-            .style("fill", this.visualSettings.cursor.show.value ? this.visualSettings.cursor.color.value.value : "transparent")
+            .style("fill", this.visualSettings.cursor.show.value ? this.visualSettings.cursor.color.value.value : "transparent");
     }
 
     public renderTimeRangeText(timelineData: ITimelineData, rangeHeaderSettings: RangeHeaderSettingsCard): void {
@@ -604,7 +489,7 @@ export class Timeline implements powerbiVisualsApi.extensibility.visual.IVisual 
             // تغییر در اینجا: ساخت متن هدر شمسی به جای میلادی
             const startDate: Date = Utils.GET_START_SELECTION_DATE(timelineData);
             const endDate: Date = Utils.GET_END_SELECTION_DATE(timelineData);
-            const timeRangeText: string = `${PersianDateHelper.formatToJalali(startDate)} تا ${PersianDateHelper.formatToJalali(endDate)}`;
+            const timeRangeText: string = JalaliCalendar.formatDateRange(startDate, endDate);
 
             const labelFormattedTextOptions: dataLabelInterfaces.LabelFormattedTextOptions = { fontSize: rangeHeaderSettings.textSize.value, label: timeRangeText, maxWidth };
             const actualText: string = dataLabelUtils.getLabelFormattedText(labelFormattedTextOptions);
@@ -623,20 +508,12 @@ export class Timeline implements powerbiVisualsApi.extensibility.visual.IVisual 
     }
 
     public setSelection(timelineData: ITimelineData): void {
-        if (Utils.ARE_BOUNDS_OF_SELECTION_AND_AVAILABLE_DATES_THE_SAME(timelineData)) {
-            this.clearSelection(timelineData.filterColumnTarget);
-            return;
-        }
+        if (Utils.ARE_BOUNDS_OF_SELECTION_AND_AVAILABLE_DATES_THE_SAME(timelineData)) { this.clearSelection(timelineData.filterColumnTarget); return; }
         this.applyDatePeriod(Utils.GET_START_SELECTION_DATE(timelineData), Utils.GET_END_SELECTION_DATE(timelineData), timelineData.filterColumnTarget);
     }
 
     public applyDatePeriod(startDate: Date, endDate: Date, target: IFilterColumnTarget): void {
-        this.host.applyJsonFilter(
-            this.createFilter(startDate, endDate, target),
-            Timeline.filterObjectProperty.objectName,
-            Timeline.filterObjectProperty.propertyName,
-            this.getFilterAction(startDate, endDate),
-        );
+        this.host.applyJsonFilter(this.createFilter(startDate, endDate, target), Timeline.filterObjectProperty.objectName, Timeline.filterObjectProperty.propertyName, this.getFilterAction(startDate, endDate));
     }
 
     public getFilterAction(startDate: Date, endDate: Date): powerbiVisualsApi.FilterAction {
@@ -650,7 +527,7 @@ export class Timeline implements powerbiVisualsApi.extensibility.visual.IVisual 
     }
 
     public createFilter(startDate: Date, endDate: Date, target: IFilterColumnTarget): AdvancedFilter {
-        if (startDate == null || endDate == null || !target) { return null; }
+        if (startDate == null || endDate == null || !target) return null;
         return new AdvancedFilter(target, "And", { operator: "GreaterThanOrEqual", value: startDate.toJSON() }, { operator: "LessThan", value: endDate.toJSON() });
     }
 
@@ -669,7 +546,7 @@ export class Timeline implements powerbiVisualsApi.extensibility.visual.IVisual 
     }
 
     public selectPeriod(granularityType: GranularityType): void {
-        if (this.timelineData.currentGranularity.getType() === granularityType) { return; }
+        if (this.timelineData.currentGranularity.getType() === granularityType) return;
         this.host.persistProperties({ merge: [{ objectName: "granularity", properties: { granularity: granularityType }, selector: null }] });
         const selectedGranularity = this.visualSettings.granularity.granularity.items.find(granularityOption => granularityOption.value === granularityType)
         this.visualSettings.granularity.granularity.value = selectedGranularity;
@@ -678,7 +555,7 @@ export class Timeline implements powerbiVisualsApi.extensibility.visual.IVisual 
     public onCursorDrag(event: D3DragEvent<any, ICursorDataPoint, ICursorDataPoint>, currentCursor: ICursorDataPoint): void {
         const mouseEvent: MouseEvent = event.sourceEvent;
         const cursorOverElement: ITimelineCursorOverElement = this.findCursorOverElement(mouseEvent.x);
-        if (!cursorOverElement) { return; }
+        if (!cursorOverElement) return;
         const currentlyMouseOverElement: ITimelineDataPoint = cursorOverElement.datapoint;
         const currentlyMouseOverElementIndex: number = cursorOverElement.index;
 
@@ -698,9 +575,9 @@ export class Timeline implements powerbiVisualsApi.extensibility.visual.IVisual 
     public findCursorOverElement(position: number): ITimelineCursorOverElement {
         const timelineDatapoints: ITimelineDataPoint[] = this.timelineData.timelineDataPoints || [];
         const cellWidth: number = this.timelineProperties.cellWidth;
-        const timelineDatapointIndexes: number[] = timelineDatapoints.map((datapoint: ITimelineDataPoint) => { return datapoint.index; });
+        const timelineDatapointIndexes: number[] = timelineDatapoints.map((datapoint: ITimelineDataPoint) => datapoint.index);
         const index: number = Utils.GET_INDEX_BY_POSITION(timelineDatapointIndexes, cellWidth, position);
-        if (!timelineDatapoints[index]) { return null; }
+        if (!timelineDatapoints[index]) return null;
         return { datapoint: timelineDatapoints[index], index };
     }
 
@@ -711,9 +588,7 @@ export class Timeline implements powerbiVisualsApi.extensibility.visual.IVisual 
 
     private updatePrevFilterState(adjustedPeriod: IAdjustedFilterDatePeriod, isForceSelected: boolean, target: IFilterColumnTarget): void {
         const wasFilterChanged: boolean = String(this.prevFilteredStartDate) !== String(adjustedPeriod.period.startDate) || String(this.prevFilteredEndDate) !== String(adjustedPeriod.period.endDate);
-        if (isForceSelected && wasFilterChanged) {
-            this.applyDatePeriod(adjustedPeriod.period.startDate, adjustedPeriod.period.endDate, target);
-        }
+        if (isForceSelected && wasFilterChanged) { this.applyDatePeriod(adjustedPeriod.period.startDate, adjustedPeriod.period.endDate, target); }
         this.prevFilteredStartDate = adjustedPeriod.period.startDate;
         this.prevFilteredEndDate = adjustedPeriod.period.endDate;
     }
@@ -774,80 +649,41 @@ export class Timeline implements powerbiVisualsApi.extensibility.visual.IVisual 
         timelineGranularityData.createGranularities(calendar, locale, localizationManager);
         timelineGranularityData.createLabels();
 
-                // --- موتور تبدیل شمسی ---
-        const allGranularities = [
-            GranularityType.year,
-            GranularityType.quarter,
-            GranularityType.month,
-            GranularityType.week,
-            GranularityType.day
-        ];
-
+        // --- موتور تبدیل شمسی ---
+        const allGranularities = [GranularityType.year, GranularityType.quarter, GranularityType.month, GranularityType.week, GranularityType.day];
+        
         allGranularities.forEach(gType => {
             const granularity = timelineGranularityData.getGranularity(gType);
             if (!granularity) return;
             
             const extendedLabels = granularity.getExtendedLabel();
             
-            // شمسی کردن لیبل‌های سال
             extendedLabels.yearLabels.forEach(label => {
-                label.text = JalaliEngine.convertToJalaliLabel(label.text);
-                label.title = JalaliEngine.convertToJalaliLabel(label.title);
+                label.text = JalaliCalendar.convertLabel(label.text);
+                label.title = JalaliCalendar.convertLabel(label.title);
             });
 
-            // شمسی کردن لیبل‌های فصل
             extendedLabels.quarterLabels.forEach(label => {
-                label.text = JalaliEngine.convertToJalaliLabel(label.text);
-                label.title = JalaliEngine.convertToJalaliLabel(label.title);
+                label.text = JalaliCalendar.convertLabel(label.text);
+                label.title = JalaliCalendar.convertLabel(label.title);
             });
 
-            // شمسی کردن لیبل‌های ماه
             extendedLabels.monthLabels.forEach(label => {
-                label.text = JalaliEngine.convertToJalaliLabel(label.text);
-                label.title = JalaliEngine.convertToJalaliLabel(label.title);
+                label.text = JalaliCalendar.convertLabel(label.text);
+                label.title = JalaliCalendar.convertLabel(label.title);
             });
 
-            // شمسی کردن لیبل‌های هفته
             extendedLabels.weekLabels.forEach(label => {
-                label.text = JalaliEngine.convertToJalaliLabel(label.text);
-                label.title = JalaliEngine.convertToJalaliLabel(label.title);
+                label.text = JalaliCalendar.convertLabel(label.text);
+                label.title = JalaliCalendar.convertLabel(label.title);
             });
 
-            // شمسی کردن لیبل‌های روز
             extendedLabels.dayLabels.forEach(label => {
-                label.text = JalaliEngine.convertToJalaliLabel(label.text);
-                label.title = JalaliEngine.convertToJalaliLabel(label.title);
+                label.text = JalaliCalendar.convertLabel(label.text);
+                label.title = JalaliCalendar.convertLabel(label.title);
             });
         });
         // ------------------------
-        // --- بخش جدید برای شمسی کردن برچسب‌ها قبل از رندر ---
-        const allGranularities = [GranularityType.year, GranularityType.quarter, GranularityType.month, GranularityType.week, GranularityType.day];
-        allGranularities.forEach(gType => {
-            const granularity = timelineGranularityData.getGranularity(gType);
-            if (!granularity) return;
-            const extendedLabels = granularity.getExtendedLabel();
-            
-            // شمسی کردن لیبل‌های ماه
-            extendedLabels.monthLabels.forEach(label => {
-                const monthIndex = parseInt(label.text) - 1;
-                if (!isNaN(monthIndex) && monthIndex >= 0 && monthIndex < 12) {
-                    const jalaliName = PersianDateHelper.getJalaliMonthName(monthIndex);
-                    label.text = jalaliName;
-                    label.title = jalaliName;
-                }
-            });
-
-            // شمسی کردن لیبل‌های سال
-            extendedLabels.yearLabels.forEach(label => {
-                const yearNum = parseInt(label.text);
-                if (!isNaN(yearNum)) {
-                    const jalaliYear = PersianDateHelper.gregorianYearToJalali(yearNum);
-                    label.text = jalaliYear.toString();
-                    label.title = jalaliYear.toString();
-                }
-            });
-        });
-        // ------------------------------------------------------
 
         if (this.initialized) {
             const actualEndDate: Date = GranularityData.NEXT_DAY(endDate);
@@ -869,7 +705,7 @@ export class Timeline implements powerbiVisualsApi.extensibility.visual.IVisual 
     }
 
     private render(timelineData: ITimelineData, settings: TimeLineSettingsModel, timelineProperties: ITimelineProperties, options: powerbiVisualsApi.extensibility.visual.VisualUpdateOptions): void {
-        const timelineDatapointCount = this.timelineData.timelineDataPoints.filter((dataPoint: ITimelineDataPoint) => { return dataPoint.index % 1 === 0; }).length;
+        const timelineDatapointCount = this.timelineData.timelineDataPoints.filter((dataPoint: ITimelineDataPoint) => dataPoint.index % 1 === 0).length;
         this.svgWidth = Timeline.SvgWidthOffset + this.timelineProperties.cellHeight + timelineProperties.cellWidth * timelineDatapointCount;
         this.renderTimeRangeText(timelineData, settings.rangeHeader);
         this.rootSelection.attr("drag-resize-disabled", true).style("overflow-x", Timeline.DefaultOverflow).style("overflow-y", Timeline.DefaultOverflow).style("height", pixelConverter.toString(options.viewport.height)).style("width", pixelConverter.toString(options.viewport.width));
@@ -951,7 +787,7 @@ export class Timeline implements powerbiVisualsApi.extensibility.visual.IVisual 
                 return dataLabelUtils.getLabelFormattedText(labelFormattedTextOptions);
             })
             .style("font-size", pixelConverter.fromPoint(this.visualSettings.labels.textSize.value))
-            .attr("x", (label: ITimelineLabel) => { return (label.id + Timeline.LabelIdOffset) * this.timelineProperties.cellWidth; })
+            .attr("x", (label: ITimelineLabel) => (label.id + Timeline.LabelIdOffset) * this.timelineProperties.cellWidth)
             .attr("y", yPosition)
             .attr("fill", this.visualSettings.labels.fontColor.value.value)
             .append("title")
@@ -993,7 +829,7 @@ export class Timeline implements powerbiVisualsApi.extensibility.visual.IVisual 
     }
 
     private scrollAutoFocusFunc(selectedGranulaPos: number): void {
-        if (!selectedGranulaPos) { return; }
+        if (!selectedGranulaPos) return;
         this.rootSelection.node().scrollLeft = selectedGranulaPos - this.horizontalAutoScrollingPositionOffset;
     }
 

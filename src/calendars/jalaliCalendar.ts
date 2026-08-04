@@ -1,10 +1,10 @@
-// src/jalaliEngine.ts
+// src/jalaliCalendar.ts
 import dayjs from 'dayjs';
 import jalaliday from 'jalaliday';
 
 dayjs.extend(jalaliday);
 
-export class JalaliEngine {
+export class JalaliCalendar {
     private static gregorianMonths: string[] = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
     private static persianMonths: string[] = ['فروردین', 'اردیبهشت', 'خرداد', 'تیر', 'مرداد', 'شهریور', 'مهر', 'آبان', 'آذر', 'دی', 'بهمن', 'اسفند'];
 
@@ -21,7 +21,7 @@ export class JalaliEngine {
             resultText = resultText.replace(regex, this.persianMonths[index]);
         });
 
-        // تبدیل سال‌های 4 رقمی میلادی به شمسی (با استفاده از روز اول سال)
+        // تبدیل سال‌های 4 رقمی میلادی به شمسی
         const currentYear = new Date().getFullYear();
         for (let year = 1990; year <= currentYear + 10; year++) {
             const jalaliYear = dayjs(`${year}-01-01`).calendar('jalali').year();
