@@ -29,18 +29,25 @@
         }
     ],
     "objects": {
-"general": {
-  "displayName": "General",
-  "displayNameKey": "Visual_General",
-  "properties": {
-    "selected": {
-      "type": { "bool": true }
-    },
-    "filter": {
-      "type": { "filter": true }
-    }
-  }
-},
+        "general": {
+            "displayName": "General",
+            "displayNameKey": "Visual_General",
+            "properties": {
+                "selected": {
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "filter": {
+                    "type": {
+                        "filter": true
+                    },
+                    "rule": {
+                        "filterFunction": "advanced"
+                    }
+                }
+            }
+        },
         "cursor": {
             "properties": {
                 "show": {
