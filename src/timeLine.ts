@@ -152,8 +152,7 @@ export class Timeline implements powerbiVisualsApi.extensibility.visual.IVisual 
 
         const category: powerbiVisualsApi.DataViewCategoryColumn = dataView.categorical.categories[0];
         this.timelineData.filterColumnTarget = extractFilterColumnTarget(category);
-        if (category.source.type.numeric) { (<any>(this.timelineData.filterColumnTarget)).ref = "Date"; }
-
+        // خط مخرب زیر حذف شد تا فیلترینگ با موتور جدید Power BI سازگار شود
         if (isCalendarChanged && startDate && endDate) {
             Utils.UNSEPARATE_SELECTION(this.timelineData.currentGranularity.getDatePeriods());
             Utils.SEPARATE_SELECTION(this.timelineData, startDate, endDate);
