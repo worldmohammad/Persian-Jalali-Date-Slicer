@@ -54,47 +54,18 @@ import jalaliday from 'jalaliday';
 
 dayjs.extend(jalaliday);
 
+// آرایه نام ماه‌های شمسی استاندارد
+const PersianMonths = ['فروردین', 'اردیبهشت', 'خرداد', 'تیر', 'مرداد', 'شهریور', 'مهر', 'آبان', 'آذر', 'دی', 'بهمن', 'اسفند'];
+
 class JalaliCalendar {
-    private static gregorianMonthsFull: string[] = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-    private static gregorianMonthsShort: string[] = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    private static persianMonths: string[] = ['فروردین', 'اردیبهشت', 'خرداد', 'تیر', 'مرداد', 'شهریور', 'مهر', 'آبان', 'آذر', 'دی', 'بهمن', 'اسفند'];
-
-    public static convertLabel(originalText: string): string {
-        if (!originalText) return originalText;
-        let resultText = originalText;
-
-        this.gregorianMonthsFull.forEach((enMonth, index) => {
-            const regex = new RegExp(enMonth, "gi");
-            resultText = resultText.replace(regex, this.persianMonths[index]);
-        });
-
-        this.gregorianMonthsShort.forEach((enMonth, index) => {
-            const regex = new RegExp(`\\b${enMonth}\\b`, "gi");
-            resultText = resultText.replace(regex, this.persianMonths[index]);
-        });
-
-        resultText = resultText.replace(/\bQ1\b/g, "فصل ۱");
-        resultText = resultText.replace(/\bQ2\b/g, "فصل ۲");
-        resultText = resultText.replace(/\bQ3\b/g, "فصل ۳");
-        resultText = resultText.replace(/\bQ4\b/g, "فصل ۴");
-        
-        resultText = resultText.replace(/\bW(\d+)\b/g, "هفته $1");
-
-        const currentYear = new Date().getFullYear();
-        for (let year = 1990; year <= currentYear + 10; year++) {
-            const jalaliYear = dayjs(`${year}-01-01`).calendar('jalali').year();
-            const regex = new RegExp(`\\b${year}\\b`, "g");
-            resultText = resultText.replace(regex, jalaliYear.toString());
-        }
-
-        return resultText;
-    }
-
     public static formatDateRange(startDate: Date, endDate: Date): string {
         if (!startDate || !endDate) return "";
-        const start = dayjs(startDate).calendar('jalali').format('YYYY/MM/DD');
-        const end = dayjs(endDate).calendar('jalali').format('YYYY/MM/DD');
-        return `${start} - ${end}`;
+        // استفاده از توابع عددی برای جلوگیری از نمایش حرف j در خروجی
+        const startD = dayjs(startDate).calendar('jalali');
+        const endD = dayjs(endDate).calendar('jalali');
+        const startStr = `${startD.year()}/${startD.month() + 1}/${startD.date()}`;
+        const endStr = `${endD.year()}/${endD.month() + 1}/${endD.date()}`;
+        return `${startStr} - ${endStr}`;
     }
 }
 // -------------------------------------------
@@ -151,8 +122,12 @@ export class Timeline implements powerbiVisualsApi.extensibility.visual.IVisual 
         }
 
         const category: powerbiVisualsApi.DataViewCategoryColumn = dataView.categorical.categories[0];
+        
+        // --- استفاده از متد رسمی مایکروسافت برای استخراج صحیح Base Column ---
+        // این متد به درستی جدول‌های مخفی Auto-Date و Hierarchy را مدیریت می‌کند
         this.timelineData.filterColumnTarget = extractFilterColumnTarget(category);
-        // خط مخرب زیر حذف شد تا فیلترینگ با موتور جدید Power BI سازگار شود
+        // -----------------------------------------------------------------
+
         if (isCalendarChanged && startDate && endDate) {
             Utils.UNSEPARATE_SELECTION(this.timelineData.currentGranularity.getDatePeriods());
             Utils.SEPARATE_SELECTION(this.timelineData, startDate, endDate);
@@ -289,12 +264,31 @@ export class Timeline implements powerbiVisualsApi.extensibility.visual.IVisual 
     private parseJsonFilters(settings: TimeLineSettingsModel, jsonFilters: AdvancedFilter[]): void {
         const { calendarFormat } = Timeline.computeCalendarFormat(settings);
         settings.calendar.day.value = Timeline.ADJUST_CALENDAR_DAY_SETTINGS(calendarFormat);
-        if (jsonFilters && jsonFilters[0] && jsonFilters[0].conditions && jsonFilters[0].conditions[0] && jsonFilters[0].conditions[1]) {
-            const startDate: Date = new Date(`${jsonFilters[0].conditions[0].value}`);
-            const endDate: Date = new Date(`${jsonFilters[0].conditions[1].value}`);
-            if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) { this.filterDatePeriod = DatePeriodBase.CREATE(startDate, endDate); } 
-            else { this.filterDatePeriod = DatePeriodBase.CREATEEMPTY(); }
-        } else { this.filterDatePeriod = DatePeriodBase.CREATEEMPTY(); }
+        if (jsonFilters && jsonFilters[0] && jsonFilters[0].conditions && jsonFilters[0].conditions.length >= 2) {
+            let date1: Date = null;
+            let date2: Date = null;
+            
+            jsonFilters[0].conditions.forEach(cond => {
+                if (cond.value && (typeof cond.value === 'string' || typeof cond.value === 'number' || cond.value instanceof Date)) {
+                    const d = new Date(cond.value);
+                    if (!isNaN(d.getTime())) {
+                        if (cond.operator === "GreaterThanOrEqual" || cond.operator === "GreaterThan") {
+                            date1 = d;
+                        } else if (cond.operator === "LessThan" || cond.operator === "LessThanOrEqual") {
+                            date2 = d;
+                        }
+                    }
+                }
+            });
+
+            if (date1 && date2) {
+                this.filterDatePeriod = DatePeriodBase.CREATE(date1, date2);
+            } else {
+                this.filterDatePeriod = DatePeriodBase.CREATEEMPTY();
+            }
+        } else { 
+            this.filterDatePeriod = DatePeriodBase.CREATEEMPTY(); 
+        }
     }
 
     private setHighContrastColors() {
@@ -574,6 +568,9 @@ export class Timeline implements powerbiVisualsApi.extensibility.visual.IVisual 
 
     public createFilter(startDate: Date, endDate: Date, target: IFilterColumnTarget): AdvancedFilter {
         if (startDate == null || endDate == null || !target) return null;
+        
+        // ارسال تاریخ با فرمت کامل ISO 8601 که موتور Power BI به طور کامل آن را می‌پذیرد
+        // و از خطای Type Mismatch و Silent Reject جلوگیری می‌کند
         return new AdvancedFilter(target, "And", 
             { operator: "GreaterThanOrEqual", value: startDate.toJSON() }, 
             { operator: "LessThan", value: endDate.toJSON() }
@@ -698,6 +695,7 @@ export class Timeline implements powerbiVisualsApi.extensibility.visual.IVisual 
         timelineGranularityData.createGranularities(calendar, locale, localizationManager);
         timelineGranularityData.createLabels();
 
+        // --- موتور محاسبه واقعی تقویم شمسی ---
         const allGranularities = [GranularityType.year, GranularityType.quarter, GranularityType.month, GranularityType.week, GranularityType.day];
         
         allGranularities.forEach(gType => {
@@ -705,32 +703,49 @@ export class Timeline implements powerbiVisualsApi.extensibility.visual.IVisual 
             if (!granularity) return;
             
             const extendedLabels = granularity.getExtendedLabel();
+            const periods = granularity.getDatePeriods();
             
-            extendedLabels.yearLabels.forEach(label => {
-                label.text = JalaliCalendar.convertLabel(label.text);
-                label.title = JalaliCalendar.convertLabel(label.title);
-            });
-
-            extendedLabels.quarterLabels.forEach(label => {
-                label.text = JalaliCalendar.convertLabel(label.text);
-                label.title = JalaliCalendar.convertLabel(label.title);
-            });
-
-            extendedLabels.monthLabels.forEach(label => {
-                label.text = JalaliCalendar.convertLabel(label.text);
-                label.title = JalaliCalendar.convertLabel(label.title);
-            });
-
-            extendedLabels.weekLabels.forEach(label => {
-                label.text = JalaliCalendar.convertLabel(label.text);
-                label.title = JalaliCalendar.convertLabel(label.title);
-            });
-
-            extendedLabels.dayLabels.forEach(label => {
-                label.text = JalaliCalendar.convertLabel(label.text);
-                label.title = JalaliCalendar.convertLabel(label.title);
-            });
+            const fixLabels = (labelsArray: ITimelineLabel[], type: string) => {
+                if (!labelsArray) return;
+                labelsArray.forEach(label => {
+                    // پیدا کردن دوره زمانی متناظر با این لیبل
+                    const period = periods.find(p => p.index === label.id);
+                    if (period && period.startDate) {
+                        const d = dayjs(period.startDate);
+                        const jalaliDate = d.calendar('jalali');
+                        
+                        if (type === 'year') {
+                            label.text = jalaliDate.year().toString();
+                            label.title = jalaliDate.year().toString();
+                        } else if (type === 'quarter') {
+                            const jMonth = jalaliDate.month(); // 0 to 11
+                            const seasonIndex = Math.floor(jMonth / 3); // 0, 1, 2, 3
+                            const seasonNames = ["بهار", "تابستان", "پاییز", "زمستان"];
+                            label.text = seasonNames[seasonIndex];
+                            label.title = `${seasonNames[seasonIndex]} ${jalaliDate.year()}`;
+                        } else if (type === 'month') {
+                            label.text = PersianMonths[jalaliDate.month()];
+                            label.title = `${PersianMonths[jalaliDate.month()]} ${jalaliDate.year()}`;
+                        } else if (type === 'week') {
+                            const startOfYear = dayjs(`${jalaliDate.year()}-01-01`).calendar('jalali');
+                            const weekNum = Math.floor(d.diff(startOfYear, 'day') / 7) + 1;
+                            label.text = `هفته ${weekNum}`;
+                            label.title = `هفته ${weekNum}`;
+                        } else if (type === 'day') {
+                            label.text = jalaliDate.date().toString();
+                            label.title = `${jalaliDate.year()}/${jalaliDate.month() + 1}/${jalaliDate.date()}`;
+                        }
+                    }
+                });
+            };
+            
+            fixLabels(extendedLabels.yearLabels, 'year');
+            fixLabels(extendedLabels.quarterLabels, 'quarter');
+            fixLabels(extendedLabels.monthLabels, 'month');
+            fixLabels(extendedLabels.weekLabels, 'week');
+            fixLabels(extendedLabels.dayLabels, 'day');
         });
+        // ------------------------------------
 
         if (this.initialized) {
             const actualEndDate: Date = GranularityData.NEXT_DAY(endDate);
