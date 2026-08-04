@@ -21,7 +21,7 @@ export class JalaliCalendar {
             resultText = resultText.replace(regex, this.persianMonths[index]);
         });
 
-        // تبدیل سال‌های 4 رقمی میلادی به شمسی
+        // تبدیل سال‌های 4 رقمی میلادی به شمسی (با استفاده از روز اول سال)
         const currentYear = new Date().getFullYear();
         for (let year = 1990; year <= currentYear + 10; year++) {
             const jalaliYear = dayjs(`${year}-01-01`).calendar('jalali').year();

@@ -17,30 +17,32 @@ const weekStandardOptions: IEnumMember[] = [
     { value: WeekStandard.ISO8061, displayName: "Visual_Week_Standard_ISO8601" },
 ];
 
+// --- تغییرات شمسی در اینجا اعمال شد ---
 const monthOptions: IEnumMember[] = [
-    { value: Month.January, displayName: "Visual_Month_January" },
-    { value: Month.February, displayName: "Visual_Month_February" },
-    { value: Month.March, displayName: "Visual_Month_March" },
-    { value: Month.April, displayName: "Visual_Month_April" },
-    { value: Month.May, displayName: "Visual_Month_May" },
-    { value: Month.June, displayName: "Visual_Month_June" },
-    { value: Month.July, displayName: "Visual_Month_July" },
-    { value: Month.August, displayName: "Visual_Month_August" },
-    { value: Month.September, displayName: "Visual_Month_September" },
-    { value: Month.October, displayName: "Visual_Month_October" },
-    { value: Month.November, displayName: "Visual_Month_November" },
-    { value: Month.December, displayName: "Visual_Month_December" },
+    { value: Month.January, displayName: "فروردین" },
+    { value: Month.February, displayName: "اردیبهشت" },
+    { value: Month.March, displayName: "خرداد" },
+    { value: Month.April, displayName: "تیر" },
+    { value: Month.May, displayName: "مرداد" },
+    { value: Month.June, displayName: "شهریور" },
+    { value: Month.July, displayName: "مهر" },
+    { value: Month.August, displayName: "آبان" },
+    { value: Month.September, displayName: "آذر" },
+    { value: Month.October, displayName: "دی" },
+    { value: Month.November, displayName: "بهمن" },
+    { value: Month.December, displayName: "اسفند" },
 ];
 
 const weekdayOptions: IEnumMember[] = [
-    { value: Weekday.Sunday, displayName: "Visual_Day_Sunday" },
-    { value: Weekday.Monday, displayName: "Visual_Day_Monday" },
-    { value: Weekday.Tuesday, displayName: "Visual_Day_Tuesday" },
-    { value: Weekday.Wednesday, displayName: "Visual_Day_Wednesday" },
-    { value: Weekday.Thursday, displayName: "Visual_Day_Thursday" },
-    { value: Weekday.Friday, displayName: "Visual_Day_Friday" },
-    { value: Weekday.Saturday, displayName: "Visual_Day_Saturday" },
+    { value: Weekday.Saturday, displayName: "شنبه" },
+    { value: Weekday.Sunday, displayName: "یک‌شنبه" },
+    { value: Weekday.Monday, displayName: "دوشنبه" },
+    { value: Weekday.Tuesday, displayName: "سه‌شنبه" },
+    { value: Weekday.Wednesday, displayName: "چهارشنبه" },
+    { value: Weekday.Thursday, displayName: "پنج‌شنبه" },
+    { value: Weekday.Friday, displayName: "جمعه" },
 ];
+// -------------------------------------
 
 const granularityOptions: IEnumMember[] = [
     { value: GranularityType.year, displayName: "Visual_Granularity_Year" },
@@ -468,7 +470,12 @@ export class TimeLineSettingsModel extends Model {
 
     private setLocalizedDisplayName(options: IEnumMember[], localizationManager: ILocalizationManager) {
         options.forEach(option => {
-            option.displayName = localizationManager.getDisplayName(option.displayName.toString())
+            const displayNameStr = option.displayName ? option.displayName.toString() : "";
+            // اگر کلمه فارسی بود (مثل فروردین)، دیگر آن را به سیستم ترجمه Power BI نفرست
+            if(displayNameStr && !displayNameStr.startsWith("Visual_")) {
+                return;
+            }
+            option.displayName = localizationManager.getDisplayName(displayNameStr);
         });
     }
 }

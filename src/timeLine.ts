@@ -48,8 +48,42 @@ import {Month} from "./calendars/month";
 import {Weekday} from "./calendars/weekday";
 import {Behavior} from "./behavior";
 
-// ایمپورت فایل شمسی
-import { JalaliCalendar } from "./jalaliCalendar";
+// --- کلاس شمسی مستقیماً در اینجا اضافه شد ---
+import dayjs from 'dayjs';
+import jalaliday from 'jalaliday';
+dayjs.extend(jalaliday);
+
+class JalaliCalendar {
+    private static gregorianMonths: string[] = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    private static persianMonths: string[] = ['فروردین', 'اردیبهشت', 'خرداد', 'تیر', 'مرداد', 'شهریور', 'مهر', 'آبان', 'آذر', 'دی', 'بهمن', 'اسفند'];
+
+    public static convertLabel(originalText: string): string {
+        if (!originalText) return originalText;
+        let resultText = originalText;
+
+        this.gregorianMonths.forEach((enMonth, index) => {
+            const regex = new RegExp(enMonth, "gi");
+            resultText = resultText.replace(regex, this.persianMonths[index]);
+        });
+
+        const currentYear = new Date().getFullYear();
+        for (let year = 1990; year <= currentYear + 10; year++) {
+            const jalaliYear = dayjs(`${year}-01-01`).calendar('jalali').year();
+            const regex = new RegExp(`\\b${year}\\b`, "g");
+            resultText = resultText.replace(regex, jalaliYear.toString());
+        }
+
+        return resultText;
+    }
+
+    public static formatDateRange(startDate: Date, endDate: Date): string {
+        if (!startDate || !endDate) return "";
+        const start = dayjs(startDate).calendar('jalali').format('jYYYY/jMM/jDD');
+        const end = dayjs(endDate).calendar('jalali').format('jYYYY/jMM/jDD');
+        return `${start} تا ${end}`;
+    }
+}
+// -------------------------------------------
 
 interface IAdjustedFilterDatePeriod {
     period: DatePeriodBase;
@@ -486,7 +520,6 @@ export class Timeline implements powerbiVisualsApi.extensibility.visual.IVisual 
         if (rangeHeaderSettings.show.value && maxWidth > 0) {
             this.rangeTextSelection = this.headerSelection.append("g").classed(Timeline.TimelineSelectors.RangeTextArea.className, true).append("text");
             
-            // تغییر در اینجا: ساخت متن هدر شمسی به جای میلادی
             const startDate: Date = Utils.GET_START_SELECTION_DATE(timelineData);
             const endDate: Date = Utils.GET_END_SELECTION_DATE(timelineData);
             const timeRangeText: string = JalaliCalendar.formatDateRange(startDate, endDate);
