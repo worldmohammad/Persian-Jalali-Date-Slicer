@@ -3,8 +3,6 @@
 # 📅 Persian Jalali Date Slicer  
 **اسلایسر تاریخ شمسی برای Power BI**
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-
 > یک اسلایسر گرافیکی و زیبا برای بازه‌های زمانی در Power BI — **فورک‌شده از Timeline Slicer مایکروسافت** و اکنون با پشتیبانی کامل از **تقویم هجری شمسی (جلالی)** و **رابط کاربری کاملاً فارسی**.  
 >
 > 👨‍💻 توسعه‌دهنده: **محمد علیپور**  
