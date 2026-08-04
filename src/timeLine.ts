@@ -43,7 +43,6 @@ import {
 } from "./timeLineSettingsModel";
 import {FormattingSettingsService} from "powerbi-visuals-utils-formattingmodel";
 import ISelectionManager = powerbiVisualsApi.extensibility.ISelectionManager;
-import extractFilterColumnTarget = interactivityFilterService.extractFilterColumnTarget;
 import {Month} from "./calendars/month";
 import {Weekday} from "./calendars/weekday";
 import {Behavior} from "./behavior";
@@ -60,7 +59,6 @@ const PersianMonths = ['فروردین', 'اردیبهشت', 'خرداد', 'تی
 class JalaliCalendar {
     public static formatDateRange(startDate: Date, endDate: Date): string {
         if (!startDate || !endDate) return "";
-        // استفاده از توابع عددی برای جلوگیری از نمایش حرف j در خروجی
         const startD = dayjs(startDate).calendar('jalali');
         const endD = dayjs(endDate).calendar('jalali');
         const startStr = `${startD.year()}/${startD.month() + 1}/${startD.date()}`;
@@ -123,10 +121,20 @@ export class Timeline implements powerbiVisualsApi.extensibility.visual.IVisual 
 
         const category: powerbiVisualsApi.DataViewCategoryColumn = dataView.categorical.categories[0];
         
-        // --- استفاده از متد رسمی مایکروسافت برای استخراج صحیح Base Column ---
-        // این متد به درستی جدول‌های مخفی Auto-Date و Hierarchy را مدیریت می‌کند
-        this.timelineData.filterColumnTarget = extractFilterColumnTarget(category);
-        // -----------------------------------------------------------------
+        // --- هک طلایی برای هماهنگی ۱۰۰٪ با سایر ویژوال‌ها ---
+        // حذف علامت‌های نقل قول (") که باعث Silent Reject در موتور جدید Power BI می‌شوند
+        const queryName = category.source.queryName ? category.source.queryName.replace(/"/g, '') : '';
+        const dotIndex = queryName.lastIndexOf('.');
+        if (dotIndex > 0) {
+            this.timelineData.filterColumnTarget = {
+                table: queryName.substring(0, dotIndex),
+                column: queryName.substring(dotIndex + 1)
+            } as IFilterColumnTarget;
+        } else {
+            // بازگشت به متد رسمی در صورت عدم وجود ساختار استاندارد
+            this.timelineData.filterColumnTarget = interactivityFilterService.extractFilterColumnTarget(category);
+        }
+        // -------------------------------------------------------
 
         if (isCalendarChanged && startDate && endDate) {
             Utils.UNSEPARATE_SELECTION(this.timelineData.currentGranularity.getDatePeriods());
@@ -569,11 +577,11 @@ export class Timeline implements powerbiVisualsApi.extensibility.visual.IVisual 
     public createFilter(startDate: Date, endDate: Date, target: IFilterColumnTarget): AdvancedFilter {
         if (startDate == null || endDate == null || !target) return null;
         
-        // ارسال تاریخ با فرمت کامل ISO 8601 که موتور Power BI به طور کامل آن را می‌پذیرد
-        // و از خطای Type Mismatch و Silent Reject جلوگیری می‌کند
+        // ارسال آبجکت Date مستقیماً به عنوان Value
+        // این کار از خطای Type Mismatch در موتور Power BI جلوگیری می‌کند
         return new AdvancedFilter(target, "And", 
-            { operator: "GreaterThanOrEqual", value: startDate.toJSON() }, 
-            { operator: "LessThan", value: endDate.toJSON() }
+            { operator: "GreaterThanOrEqual", value: startDate }, 
+            { operator: "LessThan", value: endDate }
         );
     }
 
@@ -708,7 +716,6 @@ export class Timeline implements powerbiVisualsApi.extensibility.visual.IVisual 
             const fixLabels = (labelsArray: ITimelineLabel[], type: string) => {
                 if (!labelsArray) return;
                 labelsArray.forEach(label => {
-                    // پیدا کردن دوره زمانی متناظر با این لیبل
                     const period = periods.find(p => p.index === label.id);
                     if (period && period.startDate) {
                         const d = dayjs(period.startDate);
@@ -727,8 +734,10 @@ export class Timeline implements powerbiVisualsApi.extensibility.visual.IVisual 
                             label.text = PersianMonths[jalaliDate.month()];
                             label.title = `${PersianMonths[jalaliDate.month()]} ${jalaliDate.year()}`;
                         } else if (type === 'week') {
+                            // محاسبه استاندارد و دقیق شماره هفته سال شمسی
                             const startOfYear = dayjs(`${jalaliDate.year()}-01-01`).calendar('jalali');
-                            const weekNum = Math.floor(d.diff(startOfYear, 'day') / 7) + 1;
+                            const dayOfYear = d.diff(startOfYear, 'day');
+                            const weekNum = Math.ceil((dayOfYear + 1) / 7);
                             label.text = `هفته ${weekNum}`;
                             label.title = `هفته ${weekNum}`;
                         } else if (type === 'day') {
