@@ -1,41 +1,40 @@
-<!-- BEGIN MICROSOFT SECURITY.MD V0.0.8 BLOCK -->
+<!-- SECURITY.MD for persian-jalali-date-slicer fork -->
 
 ## Security
 
-Microsoft takes the security of our software products and services seriously, which includes all source code repositories managed through our GitHub organizations, which include [Microsoft](https://github.com/microsoft), [Azure](https://github.com/Azure), [DotNet](https://github.com/dotnet), [AspNet](https://github.com/aspnet), [Xamarin](https://github.com/xamarin), and [our GitHub organizations](https://opensource.microsoft.com/).
+The maintainer of this forked project, **Mohammad Alipour**, takes the security of the software seriously.  
+This project is a community fork of the Microsoft Timeline Slicer and is **not affiliated with or maintained by Microsoft**.
 
-If you believe you have found a security vulnerability in any Microsoft-owned repository that meets [Microsoft's definition of a security vulnerability](https://aka.ms/opensource/security/definition), please report it to us as described below.
+If you believe you have discovered a security vulnerability in this fork, please report it responsibly.  
+Do **not** open a public GitHub issue.
 
-## Reporting Security Issues
+## Reporting a Vulnerability
 
-**Please do not report security vulnerabilities through public GitHub issues.**
+Please send an email directly to the maintainer:
 
-Instead, please report them to the Microsoft Security Response Center (MSRC) at [https://msrc.microsoft.com/create-report](https://aka.ms/opensource/security/create-report).
+📧 **worldmohammad@gmail.com**
 
-If you prefer to submit without logging in, send email to [secure@microsoft.com](mailto:secure@microsoft.com).  If possible, encrypt your message with our PGP key; please download it from the [Microsoft Security Response Center PGP Key page](https://aka.ms/opensource/security/pgpkey).
+Please include the following details (as much as possible) to help assess the issue:
 
-You should receive a response within 24 hours. If for some reason you do not, please follow up via email to ensure we received your original message. Additional information can be found at [microsoft.com/msrc](https://aka.ms/opensource/security/msrc). 
+- Type of vulnerability (e.g., XSS, dependency issue, data exposure)
+- Affected component(s) or file paths
+- The branch/commit/tag where the vulnerability exists
+- Steps to reproduce the issue
+- Any proof-of-concept or exploit code (if available)
+- Potential impact and attack scenario
 
-Please include the requested information listed below (as much as you can provide) to help us better understand the nature and scope of the possible issue:
+You will receive an acknowledgment within **72 hours**. If you do not receive a response, please follow up.  
+Once the issue is validated and resolved, you may be publicly credited (with your consent).
 
-  * Type of issue (e.g. buffer overflow, SQL injection, cross-site scripting, etc.)
-  * Full paths of source file(s) related to the manifestation of the issue
-  * The location of the affected source code (tag/branch/commit or direct URL)
-  * Any special configuration required to reproduce the issue
-  * Step-by-step instructions to reproduce the issue
-  * Proof-of-concept or exploit code (if possible)
-  * Impact of the issue, including how an attacker might exploit the issue
+## Preferred Language
 
-This information will help us triage your report more quickly.
+You may report in **English** or **Persian (Farsi)**.
 
-If you are reporting for a bug bounty, more complete reports can contribute to a higher bounty award. Please visit our [Microsoft Bug Bounty Program](https://aka.ms/opensource/security/bounty) page for more details about our active programs.
+## Scope
 
-## Preferred Languages
-
-We prefer all communications to be in English.
+This security policy applies only to this forked repository (`persian-jalali-date-slicer`) and its released `.pbiviz` packages.  
+For security issues in the original Microsoft Timeline Slicer, please refer to the [Microsoft Security Response Center](https://www.microsoft.com/en-us/msrc).
 
 ## Policy
 
-Microsoft follows the principle of [Coordinated Vulnerability Disclosure](https://aka.ms/opensource/security/cvd).
-
-<!-- END MICROSOFT SECURITY.MD BLOCK -->
+We follow a responsible disclosure process and aim to address confirmed vulnerabilities promptly.

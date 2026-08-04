@@ -4,12 +4,7 @@
             "name": "Time",
             "kind": "Grouping",
             "displayName": "تاریخ (میلادی)",
-            "displayNameKey": "Role_Time",
-            "preferredTypes": [
-                {
-                    "dateTime": true
-                }
-            ]
+            "displayNameKey": "Role_Time"
         }
     ],
     "dataViewMappings": [
