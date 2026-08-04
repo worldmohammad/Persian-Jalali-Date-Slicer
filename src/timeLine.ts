@@ -4,7 +4,7 @@
  */
 
 import "../style/visual.less";
-
+import { JalaliEngine } from "./calendars/jalaliEngine";
 import {select as d3Select, selectAll as d3SelectAll, Selection as D3Selection,} from "d3-selection";
 import {D3DragEvent} from "d3-drag";
 import {arc as d3Arc} from "d3-shape";
@@ -774,6 +774,52 @@ export class Timeline implements powerbiVisualsApi.extensibility.visual.IVisual 
         timelineGranularityData.createGranularities(calendar, locale, localizationManager);
         timelineGranularityData.createLabels();
 
+                // --- موتور تبدیل شمسی ---
+        const allGranularities = [
+            GranularityType.year,
+            GranularityType.quarter,
+            GranularityType.month,
+            GranularityType.week,
+            GranularityType.day
+        ];
+
+        allGranularities.forEach(gType => {
+            const granularity = timelineGranularityData.getGranularity(gType);
+            if (!granularity) return;
+            
+            const extendedLabels = granularity.getExtendedLabel();
+            
+            // شمسی کردن لیبل‌های سال
+            extendedLabels.yearLabels.forEach(label => {
+                label.text = JalaliEngine.convertToJalaliLabel(label.text);
+                label.title = JalaliEngine.convertToJalaliLabel(label.title);
+            });
+
+            // شمسی کردن لیبل‌های فصل
+            extendedLabels.quarterLabels.forEach(label => {
+                label.text = JalaliEngine.convertToJalaliLabel(label.text);
+                label.title = JalaliEngine.convertToJalaliLabel(label.title);
+            });
+
+            // شمسی کردن لیبل‌های ماه
+            extendedLabels.monthLabels.forEach(label => {
+                label.text = JalaliEngine.convertToJalaliLabel(label.text);
+                label.title = JalaliEngine.convertToJalaliLabel(label.title);
+            });
+
+            // شمسی کردن لیبل‌های هفته
+            extendedLabels.weekLabels.forEach(label => {
+                label.text = JalaliEngine.convertToJalaliLabel(label.text);
+                label.title = JalaliEngine.convertToJalaliLabel(label.title);
+            });
+
+            // شمسی کردن لیبل‌های روز
+            extendedLabels.dayLabels.forEach(label => {
+                label.text = JalaliEngine.convertToJalaliLabel(label.text);
+                label.title = JalaliEngine.convertToJalaliLabel(label.title);
+            });
+        });
+        // ------------------------
         // --- بخش جدید برای شمسی کردن برچسب‌ها قبل از رندر ---
         const allGranularities = [GranularityType.year, GranularityType.quarter, GranularityType.month, GranularityType.week, GranularityType.day];
         allGranularities.forEach(gType => {
