@@ -51,7 +51,9 @@ import {Behavior} from "./behavior";
 // --- لایه ترجمه شمسی ---
 import dayjs from 'dayjs';
 import jalaliday from 'jalaliday';
+import utc from 'dayjs/plugin/utc';
 
+dayjs.extend(utc);
 dayjs.extend(jalaliday);
 
 const PersianMonths = ['فروردین', 'اردیبهشت', 'خرداد', 'تیر', 'مرداد', 'شهریور', 'مهر', 'آبان', 'آذر', 'دی', 'بهمن', 'اسفند'];
@@ -59,8 +61,9 @@ const PersianMonths = ['فروردین', 'اردیبهشت', 'خرداد', 'تی
 class JalaliCalendar {
     public static formatDateRange(startDate: Date, endDate: Date): string {
         if (!startDate || !endDate) return "";
-        const startD = dayjs(startDate).calendar('jalali');
-        const endD = dayjs(endDate).calendar('jalali');
+        // استفاده از UTC برای جلوگیری از شیفت زمانی در نمایش رنج
+        const startD = dayjs.utc(startDate).calendar('jalali');
+        const endD = dayjs.utc(endDate).calendar('jalali');
         const startStr = `${startD.year()}/${startD.month() + 1}/${startD.date()}`;
         const endStr = `${endD.year()}/${endD.month() + 1}/${endD.date()}`;
         return `${startStr} - ${endStr}`;
@@ -120,9 +123,7 @@ export class Timeline implements powerbiVisualsApi.extensibility.visual.IVisual 
 
         const category: powerbiVisualsApi.DataViewCategoryColumn = dataView.categorical.categories[0];
         
-        // --- استفاده از متد رسمی مایکروسافت (بدون هیچ هک دستی) ---
         this.timelineData.filterColumnTarget = extractFilterColumnTarget(category);
-        // -----------------------------------------------------------------
 
         if (isCalendarChanged && startDate && endDate) {
             Utils.UNSEPARATE_SELECTION(this.timelineData.currentGranularity.getDatePeriods());
@@ -565,11 +566,10 @@ export class Timeline implements powerbiVisualsApi.extensibility.visual.IVisual 
     public createFilter(startDate: Date, endDate: Date, target: IFilterColumnTarget): AdvancedFilter {
         if (startDate == null || endDate == null || !target) return null;
         
-        // ارسال مستقیم آبجکت Date (نه رشته متنی) برای جلوگیری از خطای Silent Reject در موتور جدید پاور بی‌آی
-        // این کار باعث می‌شود سایر ویژوالها به درستی فیلتر شوند
+        // تبدیل تاریخ به فرمت ISO String استاندارد
         return new AdvancedFilter(target, "And", 
-            { operator: "GreaterThanOrEqual", value: startDate }, 
-            { operator: "LessThan", value: endDate }
+            { operator: "GreaterThanOrEqual", value: startDate.toISOString() }, 
+            { operator: "LessThan", value: endDate.toISOString() }
         );
     }
 
@@ -703,21 +703,24 @@ export class Timeline implements powerbiVisualsApi.extensibility.visual.IVisual 
             
             const fixLabels = (labelsArray: ITimelineLabel[], type: string) => {
                 if (!labelsArray) return;
+                let lastDisplayedYear = ""; // متغیر برای نگهداری آخرین سال نمایش داده شده
                 labelsArray.forEach(label => {
                     const period = periods.find(p => p.index === label.id);
                     if (period && period.startDate) {
-                        const d = dayjs(period.startDate);
+                        // استفاده از UTC برای جلوگیری از شیفت زمانی و محاسبه دقیق سال شمسی
+                        const d = dayjs.utc(period.startDate);
                         const jalaliDate = d.calendar('jalali');
                         
                         if (type === 'year') {
                             const currentYear = jalaliDate.year().toString();
-                            // جلوگیری از تکرار شدن سال‌های شمسی در محور
-                            if (labelsArray.length > 0 && labelsArray[labelsArray.length - 1].text === currentYear) {
+                            // جلوگیری صحیح از تکرار شدن سال‌های شمسی در محور
+                            if (currentYear === lastDisplayedYear) {
                                 label.text = "";
                                 label.title = "";
                             } else {
                                 label.text = currentYear;
                                 label.title = currentYear;
+                                lastDisplayedYear = currentYear; // بروزرسانی آخرین سال نمایش داده شده
                             }
                         } else if (type === 'quarter') {
                             const jMonth = jalaliDate.month();
@@ -729,7 +732,6 @@ export class Timeline implements powerbiVisualsApi.extensibility.visual.IVisual 
                             label.text = PersianMonths[jalaliDate.month()];
                             label.title = `${PersianMonths[jalaliDate.month()]} ${jalaliDate.year()}`;
                         } else if (type === 'week') {
-                            // استفاده مستقیم از شماره هفته محاسبه شده توسط موتور اصلی مایکروسافت
                             const weekNum = period.week && period.week.length > 0 ? period.week[0] : 0;
                             label.text = `هفته ${weekNum}`;
                             label.title = `هفته ${weekNum}`;
