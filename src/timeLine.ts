@@ -564,10 +564,12 @@ export class Timeline implements powerbiVisualsApi.extensibility.visual.IVisual 
 
     public createFilter(startDate: Date, endDate: Date, target: IFilterColumnTarget): AdvancedFilter {
         if (startDate == null || endDate == null || !target) return null;
-        // ارسال فرمت استاندارد ISO 8601
+        
+        // ارسال مستقیم آبجکت Date (نه رشته متنی) برای جلوگیری از خطای Silent Reject در موتور جدید پاور بی‌آی
+        // این کار باعث می‌شود سایر ویژوالها به درستی فیلتر شوند
         return new AdvancedFilter(target, "And", 
-            { operator: "GreaterThanOrEqual", value: startDate.toJSON() }, 
-            { operator: "LessThan", value: endDate.toJSON() }
+            { operator: "GreaterThanOrEqual", value: startDate }, 
+            { operator: "LessThan", value: endDate }
         );
     }
 
@@ -708,8 +710,15 @@ export class Timeline implements powerbiVisualsApi.extensibility.visual.IVisual 
                         const jalaliDate = d.calendar('jalali');
                         
                         if (type === 'year') {
-                            label.text = jalaliDate.year().toString();
-                            label.title = jalaliDate.year().toString();
+                            const currentYear = jalaliDate.year().toString();
+                            // جلوگیری از تکرار شدن سال‌های شمسی در محور
+                            if (labelsArray.length > 0 && labelsArray[labelsArray.length - 1].text === currentYear) {
+                                label.text = "";
+                                label.title = "";
+                            } else {
+                                label.text = currentYear;
+                                label.title = currentYear;
+                            }
                         } else if (type === 'quarter') {
                             const jMonth = jalaliDate.month();
                             const seasonIndex = Math.floor(jMonth / 3);
