@@ -48,17 +48,19 @@
 
 ---
 
+---
+
 ## 📥 نصب و راه‌اندازی
 
 ### از Microsoft AppSource (نسخهٔ اصلی)
-نسخهٔ پایهٔ مایکروسافت در AppSource موجود است:  
+نسخهٔ اصلی مایکروسافت که از تقویم میلادی پشتیبانی می‌کند، در AppSource موجود است:  
 [![AppSource](https://img.shields.io/badge/AppSource-Timeline%20Slicer-blue)](https://appsource.microsoft.com/en-us/product/power-bi-visuals/WA104380786)
 
-### نسخهٔ فورک‌شده (با تقویم شمسی)
-برای استفاده از این نسخه، می‌توانید سورس کد را از همین مخزن clone کرده و با ابزار `pbiviz` بستسپس فایل .pbiviz تولیدشده را به گزارش Power BI خود وارد کنید.
+### 🛒 خرید نسخهٔ قانونی اسلایسر شمسی
+برای دریافت **نسخهٔ کامل و رسمی اسلایسر تاریخ شمسی** با پشتیبانی کامل فارسی و تقویم جلالی، می‌توانید آن را از فروشگاه دیجی فایل تهیه کنید:
 
-```bash
-git clone https://github.com/worldmohammad/persian-jalali-date-slicer.git
-cd persian-jalali-date-slicer
-npm install
-pbiviz package
+🔗 [خرید Persian Jalali Date Slicer](https://digifilestore.ir/downloads/persian-jalali-date-slicer/)
+
+با این خرید، یک فایل `.pbiviz` آمادهٔ استفاده، به همراه پشتیبانی فنی و به‌روزرسانی‌های مداوم دریافت می‌کنید و بلافاصله تاریخ‌های شمسی را به گزارش‌های Power BI خود می‌آورید.
+
+---
