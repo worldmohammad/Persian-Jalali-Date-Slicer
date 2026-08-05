@@ -691,7 +691,7 @@ export class Timeline implements powerbiVisualsApi.extensibility.visual.IVisual 
         timelineGranularityData.createGranularities(calendar, locale, localizationManager);
         timelineGranularityData.createLabels();
 
-        // --- موتور ترجمه شمسی ---
+        // --- موتور ترجمه شمسی اصولی ---
         const allGranularities = [GranularityType.year, GranularityType.quarter, GranularityType.month, GranularityType.week, GranularityType.day];
         
         allGranularities.forEach(gType => {
@@ -703,25 +703,22 @@ export class Timeline implements powerbiVisualsApi.extensibility.visual.IVisual 
             
             const fixLabels = (labelsArray: ITimelineLabel[], type: string) => {
                 if (!labelsArray) return;
-                let lastDisplayedYear = ""; // متغیر برای نگهداری آخرین سال نمایش داده شده
                 labelsArray.forEach(label => {
                     const period = periods.find(p => p.index === label.id);
-                    if (period && period.startDate) {
-                        // استفاده از UTC برای جلوگیری از شیفت زمانی و محاسبه دقیق سال شمسی
-                        const d = dayjs.utc(period.startDate);
+                    if (period && period.startDate && period.endDate) {
+                        // محاسبه نقطه وسط بازه زمانی سلول (Midpoint)
+                        // این روش اصولی‌ترین راه برای تعیین سال/ماه شمسی سلول‌های میلادی است
+                        const midTime = period.startDate.getTime() + (period.endDate.getTime() - period.startDate.getTime()) / 2;
+                        const midDate = new Date(midTime);
+                        
+                        // استفاده از UTC برای جلوگیری از شیفت زمانی
+                        const d = dayjs.utc(midDate);
                         const jalaliDate = d.calendar('jalali');
                         
                         if (type === 'year') {
                             const currentYear = jalaliDate.year().toString();
-                            // جلوگیری صحیح از تکرار شدن سال‌های شمسی در محور
-                            if (currentYear === lastDisplayedYear) {
-                                label.text = "";
-                                label.title = "";
-                            } else {
-                                label.text = currentYear;
-                                label.title = currentYear;
-                                lastDisplayedYear = currentYear; // بروزرسانی آخرین سال نمایش داده شده
-                            }
+                            label.text = currentYear;
+                            label.title = currentYear;
                         } else if (type === 'quarter') {
                             const jMonth = jalaliDate.month();
                             const seasonIndex = Math.floor(jMonth / 3);
@@ -764,7 +761,6 @@ export class Timeline implements powerbiVisualsApi.extensibility.visual.IVisual 
             }
         }
     }
-
     private updateCalendar(): void {
         this.calendar = this.CONVERTER(this.options.dataViews[0], this.initialized, this.options.viewport, this.calendar);
     }
